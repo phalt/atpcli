@@ -33,7 +33,9 @@ def _render_text_with_links(text: str) -> Text:
     Returns:
         Rich Text object with clickable links
     """
-    # Pattern to match URLs
+    # Pattern to match URLs. This is a simple pattern that works for most common URLs.
+    # It may not match all valid URLs (e.g., those with special characters or authentication)
+    # or may match some invalid ones, but it covers the majority of use cases.
     url_pattern = r'https?://[^\s<>"{}|\\^`\[\]]+'
 
     rich_text = Text()

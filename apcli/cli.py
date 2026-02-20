@@ -82,8 +82,13 @@ def timeline(limit: int, page: int):
         client.login(session_string=session_string)
 
         # Calculate cursor position for pagination
-        # We need to fetch pages sequentially to get the cursor
+        # Note: We need to fetch pages sequentially to get the cursor for each page.
+        # This means accessing page N requires N API calls, which can be slow for high page numbers.
         cursor = None
+        if page > 5:
+            warning_msg = f"[yellow]⚠ Loading page {page} requires {page} API calls. This may take a moment...[/yellow]"
+            console.print(warning_msg)
+
         for i in range(1, page):
             response = client.get_timeline(limit=limit, cursor=cursor)
             cursor = response.cursor
