@@ -3,7 +3,7 @@
 import tempfile
 from pathlib import Path
 
-from apcli.config import Config
+from atpcli.config import Config
 
 
 def test_config_initialization():

@@ -1,4 +1,4 @@
-"""CLI commands for apcli."""
+"""CLI commands for atpcli."""
 
 import textwrap
 
@@ -6,12 +6,12 @@ import click
 from atproto import Client
 from rich.console import Console
 
-from apcli.config import Config
-from apcli.display import display_post
+from atpcli.config import Config
+from atpcli.display import display_post
 
 console = Console()
 
-APCLI_HEADER = r"""
+atpcli_HEADER = r"""
                   _  _
   __ _ _ __  ____| (_)
  / _` | '_ \/ ___| | |
@@ -23,17 +23,17 @@ APCLI_HEADER = r"""
 
 @click.group()
 def cli():
-    """apcli - A Python CLI wrapper around the atproto package."""
+    """atpcli - A Python CLI wrapper around the atproto package."""
     pass
 
 
 cli.help = textwrap.dedent(f"""\
 \b
-{APCLI_HEADER}
+{atpcli_HEADER}
 
-🦋 apcli - A Python CLI wrapper around the atproto package
+🦋 atpcli - A Python CLI wrapper around the atproto package
 
-📚 GitHub: https://github.com/phalt/apcli
+📚 GitHub: https://github.com/phalt/atpcli
 
 """).strip("\n")
 
@@ -80,7 +80,7 @@ def timeline(limit: int, page: int):
     handle, session_string = config.load_session()
 
     if not session_string:
-        console.print("[red]✗ Not logged in. Please run 'apcli bsky login' first.[/red]")
+        console.print("[red]✗ Not logged in. Please run 'atpcli bsky login' first.[/red]")
         raise SystemExit(1)
 
     try:

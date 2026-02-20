@@ -27,22 +27,22 @@ pip install uv
 powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
 ```
 
-## Installing apcli
+## Installing atpcli
 
 ### As a Global Tool (Recommended)
 
-Install apcli globally using uv's tool management:
+Install atpcli globally using uv's tool management:
 
 ```bash
-uv tool install apcli
+uv tool install atpcli
 ```
 
-This makes the `apcli` command available system-wide, so you can run it from anywhere in your terminal without needing `uv run` or activating a virtual environment.
+This makes the `atpcli` command available system-wide, so you can run it from anywhere in your terminal without needing `uv run` or activating a virtual environment.
 
 After installation, verify it works:
 
 ```bash
-apcli --help
+atpcli --help
 ```
 
 ### From Source (Development)
@@ -50,8 +50,8 @@ apcli --help
 Clone the repository and install:
 
 ```bash
-git clone https://github.com/phalt/apcli.git
-cd apcli
+git clone https://github.com/phalt/atpcli.git
+cd atpcli
 uv sync
 ```
 
@@ -62,31 +62,31 @@ This will create a virtual environment and install all dependencies.
 If you prefer to install in a specific virtual environment:
 
 ```bash
-uv pip install apcli
+uv pip install atpcli
 ```
 
-Note: With this method, you'll need to use `uv run apcli` or activate the virtual environment first.
+Note: With this method, you'll need to use `uv run atpcli` or activate the virtual environment first.
 
 ### Using pip (Alternative)
 
 ```bash
-pip install apcli
+pip install atpcli
 ```
 
 ## Verifying Installation
 
-After installation, verify that apcli is working:
+After installation, verify that atpcli is working:
 
 ```bash
-apcli --help
+atpcli --help
 ```
 
 You should see the help message with available commands:
 
 ```
-Usage: apcli [OPTIONS] COMMAND [ARGS]...
+Usage: atpcli [OPTIONS] COMMAND [ARGS]...
 
-  apcli - A Python CLI wrapper around the atproto package.
+  atpcli - A Python CLI wrapper around the atproto package.
 
 Options:
   --help  Show this message and exit.
@@ -98,7 +98,7 @@ Commands:
 
 ## Next Steps
 
-Now that you have apcli installed, check out the [Quick Start Guide](getting-started.md) to learn how to:
+Now that you have atpcli installed, check out the [Quick Start Guide](getting-started.md) to learn how to:
 
 1. Get an app password from Bluesky
 2. Login to your account

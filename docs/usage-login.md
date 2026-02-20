@@ -5,7 +5,7 @@ The `login` command authenticates you with Bluesky and saves your session for fu
 ## Basic Usage
 
 ```bash
-apcli bsky login
+atpcli bsky login
 ```
 
 This will prompt you for your credentials interactively.
@@ -13,7 +13,7 @@ This will prompt you for your credentials interactively.
 ## Command Options
 
 ```bash
-apcli bsky login [OPTIONS]
+atpcli bsky login [OPTIONS]
 ```
 
 ### Options
@@ -27,11 +27,11 @@ apcli bsky login [OPTIONS]
 When you run the command without options, you'll be prompted:
 
 ```bash
-$ apcli bsky login
+$ atpcli bsky login
 Handle: alice.bsky.social
 Password: ****
 ✓ Successfully logged in as Alice
-Session saved to /home/user/.config/apcli/config.json
+Session saved to /home/user/.config/atpcli/config.json
 ```
 
 !!! tip "Password Hidden"
@@ -42,7 +42,7 @@ Session saved to /home/user/.config/apcli/config.json
 You can provide credentials as command-line options:
 
 ```bash
-apcli bsky login --handle alice.bsky.social --password your-app-password
+atpcli bsky login --handle alice.bsky.social --password your-app-password
 ```
 
 !!! warning "Security Risk"
@@ -50,10 +50,10 @@ apcli bsky login --handle alice.bsky.social --password your-app-password
 
 ## Session Storage
 
-When you login, apcli saves your session to:
+When you login, atpcli saves your session to:
 
 ```
-~/.config/apcli/config.json
+~/.config/atpcli/config.json
 ```
 
 This file contains:
@@ -79,7 +79,7 @@ The config file is a simple JSON file:
 To login with a different account, simply run `login` again:
 
 ```bash
-apcli bsky login
+atpcli bsky login
 ```
 
 This will overwrite the previous session.
@@ -108,8 +108,8 @@ If you get permission errors when saving the config:
 
 ```bash
 # Ensure the config directory exists and is writable
-mkdir -p ~/.config/apcli
-chmod 755 ~/.config/apcli
+mkdir -p ~/.config/atpcli
+chmod 755 ~/.config/atpcli
 ```
 
 ## Security Considerations
@@ -128,46 +128,46 @@ chmod 755 ~/.config/apcli
 
 Your session file contains authentication credentials. Protect it:
 
-- Keep `~/.config/apcli/config.json` private
+- Keep `~/.config/atpcli/config.json` private
 - Don't share the file with others
 - Don't commit it to version control
-- Set appropriate file permissions: `chmod 600 ~/.config/apcli/config.json`
+- Set appropriate file permissions: `chmod 600 ~/.config/atpcli/config.json`
 
 ### Revoking Access
 
-To revoke apcli's access:
+To revoke atpcli's access:
 
 1. Go to Bluesky Settings → App Passwords
-2. Find the app password you created for apcli
+2. Find the app password you created for atpcli
 3. Click "Revoke"
-4. Delete `~/.config/apcli/config.json` on your machine
+4. Delete `~/.config/atpcli/config.json` on your machine
 
 ## Examples
 
 ### First-time Login
 
 ```bash
-$ apcli bsky login
+$ atpcli bsky login
 Handle: alice.bsky.social
 Password: ****
 ✓ Successfully logged in as Alice
-Session saved to /home/alice/.config/apcli/config.json
+Session saved to /home/alice/.config/atpcli/config.json
 ```
 
 ### Switching Accounts
 
 ```bash
-$ apcli bsky login
+$ atpcli bsky login
 Handle: bob.bsky.social
 Password: ****
 ✓ Successfully logged in as Bob
-Session saved to /home/user/.config/apcli/config.json
+Session saved to /home/user/.config/atpcli/config.json
 ```
 
 ### Login with Command-line Options
 
 ```bash
-$ apcli bsky login --handle alice.bsky.social --password xxxx-xxxx-xxxx-xxxx
+$ atpcli bsky login --handle alice.bsky.social --password xxxx-xxxx-xxxx-xxxx
 ✓ Successfully logged in as Alice
-Session saved to /home/alice/.config/apcli/config.json
+Session saved to /home/alice/.config/atpcli/config.json
 ```

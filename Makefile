@@ -1,5 +1,5 @@
 help:
-	@echo Developer commands for apcli
+	@echo Developer commands for atpcli
 	@echo
 	@grep -E '^[ .a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 	@echo
@@ -22,7 +22,7 @@ clean:  ## Clear any cache files and test files
 	rm -rf site/
 
 test:  ## Run tests
-	uv run pytest -vvv -x --cov=apcli --cov-report=term-missing --cov-report=html --cov-config=pyproject.toml
+	uv run pytest -vvv -x --cov=atpcli --cov-report=term-missing --cov-report=html --cov-config=pyproject.toml
 
 docs-serve:  ## Run a local documentation server
 	uv run mkdocs serve

@@ -1,5 +1,5 @@
-site_name: apcli
-site_url: https://github.com/phalt/apcli
+site_name: atpcli
+site_url: https://github.com/phalt/atpcli
 theme:
   name: material
   features:
@@ -26,8 +26,8 @@ theme:
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
-repo_name: phalt/apcli
-repo_url: https://github.com/phalt/apcli
+repo_name: phalt/atpcli
+repo_url: https://github.com/phalt/atpcli
 nav:
   - 🏠 Home: index.md
   - 🚀 Getting Started:

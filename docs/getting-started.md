@@ -4,7 +4,7 @@ This guide will walk you through getting credentials from Bluesky, logging in, a
 
 ## Step 1: Get an App Password from Bluesky
 
-For security reasons, apcli uses **app passwords** instead of your main Bluesky password. App passwords are special passwords that:
+For security reasons, atpcli uses **app passwords** instead of your main Bluesky password. App passwords are special passwords that:
 
 - Can be used by third-party apps
 - Can be revoked at any time without changing your main password
@@ -17,7 +17,7 @@ For security reasons, apcli uses **app passwords** instead of your main Bluesky 
 3. **Go to App Passwords** - In the settings menu, find and click on "App Passwords"
 4. **Create New App Password**:
    - Click "Add App Password"
-   - Give it a name (e.g., "apcli" or "Terminal CLI")
+   - Give it a name (e.g., "atpcli" or "Terminal CLI")
    - Click "Create"
 5. **Copy the Password** - **Important**: Copy the generated password immediately! You won't be able to see it again.
 
@@ -27,12 +27,12 @@ For security reasons, apcli uses **app passwords** instead of your main Bluesky 
 !!! tip "Multiple App Passwords"
     You can create multiple app passwords for different apps or devices. This makes it easy to revoke access to a specific app without affecting others.
 
-## Step 2: Login with apcli
+## Step 2: Login with atpcli
 
-Once you have your app password, you can login to apcli:
+Once you have your app password, you can login to atpcli:
 
 ```bash
-apcli bsky login
+atpcli bsky login
 ```
 
 You'll be prompted for:
@@ -43,22 +43,22 @@ You'll be prompted for:
 Example:
 
 ```bash
-$ apcli bsky login
+$ atpcli bsky login
 Handle: alice.bsky.social
 Password: ****
 ✓ Successfully logged in as Alice
-Session saved to /home/user/.config/apcli/config.json
+Session saved to /home/user/.config/atpcli/config.json
 ```
 
 !!! success "Session Saved"
-    Your session is saved locally in `~/.config/apcli/config.json`. You only need to login once - the session will persist across commands.
+    Your session is saved locally in `~/.config/atpcli/config.json`. You only need to login once - the session will persist across commands.
 
 ## Step 3: View Your Timeline
 
 Now that you're logged in, you can view your timeline:
 
 ```bash
-apcli bsky timeline
+atpcli bsky timeline
 ```
 
 This will display your timeline with:
@@ -73,13 +73,13 @@ You can control how many posts to show using the `--limit` flag:
 
 ```bash
 # Show 5 posts
-apcli bsky timeline --limit 5
+atpcli bsky timeline --limit 5
 
 # Show 20 posts
-apcli bsky timeline --limit 20
+atpcli bsky timeline --limit 20
 
 # Show 50 posts
-apcli bsky timeline --limit 50
+atpcli bsky timeline --limit 50
 ```
 
 ### Navigate Through Pages
@@ -88,13 +88,13 @@ Use the `--p` flag to navigate through different pages:
 
 ```bash
 # View page 1 (default)
-apcli bsky timeline
+atpcli bsky timeline
 
 # View page 2
-apcli bsky timeline --p 2
+atpcli bsky timeline --p 2
 
 # View page 3 with 20 posts per page
-apcli bsky timeline --limit 20 --p 3
+atpcli bsky timeline --limit 20 --p 3
 ```
 
 Example output:
@@ -118,10 +118,10 @@ Showing 3 posts
 If you see this error:
 
 ```
-✗ Not logged in. Please run 'apcli bsky login' first.
+✗ Not logged in. Please run 'atpcli bsky login' first.
 ```
 
-Simply run `apcli bsky login` to authenticate.
+Simply run `atpcli bsky login` to authenticate.
 
 ### "Login failed" Error
 
@@ -136,14 +136,14 @@ This usually means:
 If your session expires, simply login again:
 
 ```bash
-apcli bsky login
+atpcli bsky login
 ```
 
 ## Security Best Practices
 
 1. **Use App Passwords**: Always use app passwords, never your main password
 2. **Revoke Unused Passwords**: Regularly review and revoke app passwords you no longer use
-3. **Keep Config Safe**: The config file at `~/.config/apcli/config.json` contains your session. Keep it secure
+3. **Keep Config Safe**: The config file at `~/.config/atpcli/config.json` contains your session. Keep it secure
 4. **Don't Share Sessions**: Never share your config file or session string with others
 
 ## Next Steps

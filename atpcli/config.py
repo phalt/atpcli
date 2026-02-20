@@ -1,4 +1,4 @@
-"""Configuration management for apcli."""
+"""Configuration management for atpcli."""
 
 import json
 from pathlib import Path
@@ -6,12 +6,12 @@ from typing import Optional
 
 
 class Config:
-    """Manage apcli configuration and session state."""
+    """Manage atpcli configuration and session state."""
 
     def __init__(self, config_dir: Optional[Path] = None):
         """Initialize config with optional custom directory."""
         if config_dir is None:
-            config_dir = Path.home() / ".config" / "apcli"
+            config_dir = Path.home() / ".config" / "atpcli"
         self.config_dir = config_dir
         self.config_file = self.config_dir / "config.json"
         self.config_dir.mkdir(parents=True, exist_ok=True)

@@ -4,13 +4,13 @@ First things first: thank you for contributing! This project will be successful 
 
 ## Bug or issue?
 
-To raise a bug or issue please use [our GitHub](https://github.com/phalt/apcli/issues).
+To raise a bug or issue please use [our GitHub](https://github.com/phalt/atpcli/issues).
 
 Please check the issue has not been raised before by using the search feature.
 
 When submitting an issue or bug, please make sure you provide thorough detail on:
 
-1. The version of apcli you are using
+1. The version of atpcli you are using
 2. Any errors or outputs you see in your terminal
 3. Steps to reproduce the issue
 
@@ -34,8 +34,8 @@ Contribution by writing code for new features, or fixing bugs, is a great way to
 Clone the repo:
 
 ```sh
-git clone git@github.com:phalt/apcli.git
-cd apcli
+git clone git@github.com:phalt/atpcli.git
+cd atpcli
 ```
 
 Move to a feature branch:
@@ -86,7 +86,7 @@ make format
 
 ### Making a pull request
 
-Please push your changes up to a feature branch and make a new [pull request](https://github.com/phalt/apcli/compare) on GitHub.
+Please push your changes up to a feature branch and make a new [pull request](https://github.com/phalt/atpcli/compare) on GitHub.
 
 Please add a description to the PR and some information about why the change is being made.
 

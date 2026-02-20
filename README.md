@@ -1,4 +1,4 @@
-# apcli
+# atpcli
 
 A Python CLI wrapper around the [atproto](https://github.com/MarshalX/atproto) package for interacting with Bluesky.
 
@@ -7,7 +7,7 @@ A Python CLI wrapper around the [atproto](https://github.com/MarshalX/atproto) p
 Full documentation is available at [docs/](docs/):
 
 - [Installation Guide](docs/install.md)
-- [Quick Start Guide](docs/getting-started.md) - Learn how to get app passwords and use apcli
+- [Quick Start Guide](docs/getting-started.md) - Learn how to get app passwords and use atpcli
 - [Login Command](docs/usage-login.md)
 - [Timeline Command](docs/usage-timeline.md)
 
@@ -24,16 +24,16 @@ make docs-serve
 Install globally using [uv](https://docs.astral.sh/uv/):
 
 ```bash
-uv tool install apcli
+uv tool install atpcli
 ```
 
-This installs `apcli` as a global tool, making it available from anywhere in your terminal.
+This installs `atpcli` as a global tool, making it available from anywhere in your terminal.
 
 Or for development:
 
 ```bash
-git clone https://github.com/phalt/apcli.git
-cd apcli
+git clone https://github.com/phalt/atpcli.git
+cd atpcli
 make install
 ```
 
@@ -46,17 +46,17 @@ make install
 Login to your Bluesky account and save the session:
 
 ```bash
-apcli bsky login
+atpcli bsky login
 ```
 
-You'll be prompted for your handle and password. The session will be saved to `~/.config/apcli/config.json`.
+You'll be prompted for your handle and password. The session will be saved to `~/.config/atpcli/config.json`.
 
 ### View Timeline
 
 View your timeline:
 
 ```bash
-apcli bsky timeline
+atpcli bsky timeline
 ```
 
 Options:
@@ -65,8 +65,8 @@ Options:
 
 Example:
 ```bash
-apcli bsky timeline --limit 20
-apcli bsky timeline --p 2
+atpcli bsky timeline --limit 20
+atpcli bsky timeline --p 2
 ```
 
 ## Development

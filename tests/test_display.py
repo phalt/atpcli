@@ -6,7 +6,7 @@ from atproto_client.models.app.bsky.embed.images import View as ImagesView
 from atproto_client.models.app.bsky.embed.record_with_media import View as RecordWithMediaView
 from rich.text import Text
 
-from apcli.display import _at_uri_to_web_url, _has_image, _render_text_with_links, display_post
+from atpcli.display import _at_uri_to_web_url, _has_image, _render_text_with_links, display_post
 
 
 def test_at_uri_to_web_url():
@@ -124,7 +124,7 @@ def test_has_image_with_non_image_embed():
     mock_post = MagicMock()
     # Mock a different embed type (not ImagesView or RecordWithMediaView)
     mock_post.embed = MagicMock()
-    mock_post.embed.__class__ = type('OtherEmbed', (), {})
+    mock_post.embed.__class__ = type("OtherEmbed", (), {})
     assert _has_image(mock_post) is False
 
 

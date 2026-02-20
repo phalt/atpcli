@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from click.testing import CliRunner
 
-from apcli.cli import cli
+from atpcli.cli import cli
 
 
 @pytest.fixture
@@ -27,7 +27,7 @@ def test_cli_group(runner):
     """Test that CLI group runs."""
     result = runner.invoke(cli, ["--help"])
     assert result.exit_code == 0
-    assert "apcli" in result.output
+    assert "atpcli" in result.output
 
 
 def test_bsky_group(runner):
@@ -51,8 +51,8 @@ def test_timeline_command_help(runner):
     assert "View your timeline" in result.output
 
 
-@patch("apcli.cli.Client")
-@patch("apcli.cli.Config")
+@patch("atpcli.cli.Client")
+@patch("atpcli.cli.Config")
 def test_login_success(mock_config_class, mock_client_class, runner, temp_config):
     """Test successful login."""
     # Setup mocks
@@ -78,8 +78,8 @@ def test_login_success(mock_config_class, mock_client_class, runner, temp_config
     mock_config.save_session.assert_called_once_with("test.bsky.social", "test_session")
 
 
-@patch("apcli.cli.Client")
-@patch("apcli.cli.Config")
+@patch("atpcli.cli.Client")
+@patch("atpcli.cli.Config")
 def test_timeline_not_logged_in(mock_config_class, mock_client_class, runner):
     """Test timeline when not logged in."""
     mock_config = MagicMock()
@@ -92,8 +92,8 @@ def test_timeline_not_logged_in(mock_config_class, mock_client_class, runner):
     assert "Not logged in" in result.output
 
 
-@patch("apcli.cli.Client")
-@patch("apcli.cli.Config")
+@patch("atpcli.cli.Client")
+@patch("atpcli.cli.Config")
 def test_timeline_success(mock_config_class, mock_client_class, runner):
     """Test successful timeline fetch."""
     # Setup mocks
@@ -134,8 +134,8 @@ def test_timeline_success(mock_config_class, mock_client_class, runner):
     mock_client.get_timeline.assert_called_once_with(limit=10, cursor=None)
 
 
-@patch("apcli.cli.Client")
-@patch("apcli.cli.Config")
+@patch("atpcli.cli.Client")
+@patch("atpcli.cli.Config")
 def test_timeline_with_pagination(mock_config_class, mock_client_class, runner):
     """Test timeline with pagination."""
     # Setup mocks

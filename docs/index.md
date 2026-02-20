@@ -1,10 +1,10 @@
-# 🏠 apcli
+# 🏠 atpcli
 
 **A Python CLI wrapper around the atproto package for interacting with Bluesky**
 
-## What is apcli?
+## What is atpcli?
 
-apcli is a minimal command-line interface for interacting with [Bluesky](https://bsky.app), built on top of the [atproto](https://github.com/MarshalX/atproto) Python SDK. It provides simple commands for logging in and viewing your timeline.
+atpcli is a minimal command-line interface for interacting with [Bluesky](https://bsky.app), built on top of the [atproto](https://github.com/MarshalX/atproto) Python SDK. It provides simple commands for logging in and viewing your timeline.
 
 ## Features
 
@@ -18,13 +18,13 @@ apcli is a minimal command-line interface for interacting with [Bluesky](https:/
 
 ```bash
 # Login to Bluesky
-apcli bsky login
+atpcli bsky login
 
 # View your timeline
-apcli bsky timeline --limit 10
+atpcli bsky timeline --limit 10
 ```
 
-## Why use apcli?
+## Why use atpcli?
 
 - **Simple**: Just two commands - login and timeline
 - **Secure**: Uses app passwords instead of your main password
@@ -37,6 +37,6 @@ Ready to get started? Check out the [Installation](install.md) guide and then th
 
 ## Project Information
 
-- **GitHub**: [phalt/apcli](https://github.com/phalt/apcli)
+- **GitHub**: [phalt/atpcli](https://github.com/phalt/atpcli)
 - **License**: MIT
 - **Python Version**: 3.10+

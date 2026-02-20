@@ -1,23 +1,19 @@
 [project]
-name = "apcli"
+name = "atpcli"
 version = "0.1.0"
 description = "A Python CLI wrapper around the atproto package"
 authors = [{ name = "Paul Hallett", email = "paulandrewhallett@gmail.com" }]
 license = { text = "MIT" }
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = [
-    "atproto>=0.0.55",
-    "click>=8.1.7",
-    "rich>=13.7.0",
-]
+dependencies = ["atproto>=0.0.55", "click>=8.1.7", "rich>=13.7.0"]
 
 [project.urls]
-Homepage = "https://github.com/phalt/apcli"
-Issues = "https://github.com/phalt/apcli/issues"
+Homepage = "https://github.com/phalt/atpcli"
+Issues = "https://github.com/phalt/atpcli/issues"
 
 [project.scripts]
-apcli = "apcli.cli:cli"
+atpcli = "atpcli.cli:cli"
 
 [dependency-groups]
 dev = [
@@ -33,7 +29,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["apcli"]
+packages = ["atpcli"]
 
 [tool.ruff]
 line-length = 120
