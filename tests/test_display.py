@@ -53,6 +53,37 @@ def test_render_text_with_links_multiple_urls():
     assert "http://test.org" in str(result)
 
 
+def test_render_text_with_links_without_protocol():
+    """Test rendering text with URLs without protocol."""
+    text = "Check out github.com/phalt/atpcli for the repo"
+    result = _render_text_with_links(text)
+    assert isinstance(result, Text)
+    # The URL should be detected and styled as a link
+    result_str = str(result)
+    assert "github.com/phalt/atpcli" in result_str
+
+
+def test_render_text_with_links_various_domains():
+    """Test rendering text with various domain formats."""
+    text = "Visit example.com or go to site.co.uk and check subdomain.example.org"
+    result = _render_text_with_links(text)
+    assert isinstance(result, Text)
+    result_str = str(result)
+    assert "example.com" in result_str
+    assert "site.co.uk" in result_str
+    assert "subdomain.example.org" in result_str
+
+
+def test_render_text_with_links_mixed_protocols():
+    """Test rendering text with mixed protocol and no-protocol URLs."""
+    text = "See https://example.com and github.com/user/repo"
+    result = _render_text_with_links(text)
+    assert isinstance(result, Text)
+    result_str = str(result)
+    assert "https://example.com" in result_str
+    assert "github.com/user/repo" in result_str
+
+
 def test_display_post():
     """Test displaying a post."""
     mock_post = MagicMock()

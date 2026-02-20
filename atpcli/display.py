@@ -35,22 +35,41 @@ def _render_text_with_links(text: str) -> Text:
     Returns:
         Rich Text object with clickable links
     """
-    # Pattern to match URLs. This is a simple pattern that works for most common URLs.
-    # It may not match all valid URLs (e.g., those with special characters or authentication)
-    # or may match some invalid ones, but it covers the majority of use cases.
-    url_pattern = r'https?://[^\s<>"{}|\\^`\[\]]+'
+    # Pattern to match URLs with or without protocol.
+    # Matches:
+    # 1. URLs starting with http:// or https://
+    # 2. Domain-like patterns (e.g., github.com/user/repo, example.com)
+    # The pattern looks for:
+    # - Optional protocol (https?://)
+    # - Domain name with at least one dot (e.g., github.com, example.co.uk)
+    # - Optional path, query, and fragment
+    url_pattern = r'(?:https?://)?(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(?:[^\s<>"{}|\\^`\[\]]*)?'
 
     rich_text = Text()
     last_end = 0
 
     for match in re.finditer(url_pattern, text):
+        matched_text = match.group()
+
+        # Skip if the match is just a domain without any path or protocol
+        # and is very short (likely not a real URL, e.g., "a.b")
+        if "/" not in matched_text and "://" not in matched_text:
+            # Check if it's a common TLD or has at least a reasonable domain
+            parts = matched_text.split(".")
+            # Skip if domain part is too short (less than 2 chars before TLD)
+            if len(parts) < 2 or len(parts[0]) < 2:
+                continue
+
         # Add text before the URL
         if match.start() > last_end:
             rich_text.append(text[last_end : match.start()])
 
         # Add the URL as a clickable link
-        url = match.group()
-        rich_text.append(url, style=f"link {url}")
+        # If the URL doesn't have a protocol, add https://
+        display_url = matched_text
+        link_url = matched_text if matched_text.startswith(("http://", "https://")) else f"https://{matched_text}"
+
+        rich_text.append(display_url, style=f"link {link_url}")
         last_end = match.end()
 
     # Add any remaining text
@@ -99,8 +118,9 @@ def display_post(post: PostView) -> Table:
     clickable_title = f"[link={web_url}]{title}[/link]"
 
     table = Table(title=clickable_title, show_header=True, expand=True)
-    table.add_column("Post", style="white")
-    table.add_column("Likes", justify="right", style="green")
+    # Use overflow="fold" to wrap text instead of truncating with ellipsis
+    table.add_column("Post", style="white", overflow="fold")
+    table.add_column("Likes", justify="right", style="green", overflow="fold")
 
     # Render text with clickable links
     text = post.record.text if hasattr(post.record, "text") else ""
