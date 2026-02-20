@@ -19,9 +19,16 @@ clean:  ## Clear any cache files and test files
 	rm -rf **/*.pyc
 	rm -rf htmlcov/
 	rm -rf .coverage
+	rm -rf site/
 
 test:  ## Run tests
 	uv run pytest -vvv -x --cov=apcli --cov-report=term-missing --cov-report=html --cov-config=pyproject.toml
+
+docs-serve:  ## Run a local documentation server
+	uv run mkdocs serve
+
+docs-build:  ## Build the documentation
+	uv run mkdocs build
 
 shell:  ## Run a Python shell
 	uv run python
