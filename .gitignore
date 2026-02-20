@@ -1,0 +1,14 @@
+.venv/
+env.ini
+.ruff_cache/
+.pytest_cache/
+.idea/
+__pycache__
+.DS_Store
+dist/
+htmlcov/
+*.coverage*
+coverage.xml
+.cache/
+*.pyc
+site/

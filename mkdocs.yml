@@ -1,0 +1,47 @@
+site_name: apcli
+site_url: https://github.com/phalt/apcli
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - content.code.copy
+    - search.suggest
+    - search.highlight
+    - navigation.footer
+  palette:
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: blue
+      accent: light blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: blue
+      accent: light blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+repo_name: phalt/apcli
+repo_url: https://github.com/phalt/apcli
+nav:
+  - 🏠 Home: index.md
+  - 🚀 Getting Started:
+    - Installation: install.md
+    - Quick Start: getting-started.md
+  - 📖 Usage:
+    - Login: usage-login.md
+    - Timeline: usage-timeline.md
+
+markdown_extensions:
+  - pymdownx.inlinehilite
+  - pymdownx.highlight
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - admonition
+  - pymdownx.details
+  - codehilite
