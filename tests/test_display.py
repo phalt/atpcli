@@ -84,6 +84,15 @@ def test_render_text_with_links_mixed_protocols():
     assert "github.com/user/repo" in result_str
 
 
+def test_render_text_with_links_single_char_domain():
+    """Test rendering text with single character domain like x.com."""
+    text = "Follow me on x.com for updates"
+    result = _render_text_with_links(text)
+    assert isinstance(result, Text)
+    result_str = str(result)
+    assert "x.com" in result_str
+
+
 def test_display_post():
     """Test displaying a post."""
     mock_post = MagicMock()

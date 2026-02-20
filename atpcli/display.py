@@ -38,27 +38,21 @@ def _render_text_with_links(text: str) -> Text:
     # Pattern to match URLs with or without protocol.
     # Matches:
     # 1. URLs starting with http:// or https://
-    # 2. Domain-like patterns (e.g., github.com/user/repo, example.com)
+    # 2. Domain-like patterns (e.g., github.com/user/repo, example.com, x.com)
     # The pattern looks for:
     # - Optional protocol (https?://)
-    # - Domain name with at least one dot (e.g., github.com, example.co.uk)
+    # - Domain name: alphanumeric segments with hyphens (but not at start/end) separated by dots
+    # - TLD with at least 2 letters
     # - Optional path, query, and fragment
-    url_pattern = r'(?:https?://)?(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(?:[^\s<>"{}|\\^`\[\]]*)?'
+    url_pattern = (
+        r'(?:https?://)?(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}(?:[^\s<>"{}|\\^`\[\]]*)?'
+    )
 
     rich_text = Text()
     last_end = 0
 
     for match in re.finditer(url_pattern, text):
         matched_text = match.group()
-
-        # Skip if the match is just a domain without any path or protocol
-        # and is very short (likely not a real URL, e.g., "a.b")
-        if "/" not in matched_text and "://" not in matched_text:
-            # Check if it's a common TLD or has at least a reasonable domain
-            parts = matched_text.split(".")
-            # Skip if domain part is too short (less than 2 chars before TLD)
-            if len(parts) < 2 or len(parts[0]) < 2:
-                continue
 
         # Add text before the URL
         if match.start() > last_end:
