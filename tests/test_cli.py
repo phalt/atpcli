@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from click.testing import CliRunner
 
-from apcli.cli import cli, login, timeline
+from apcli.cli import bsky, cli, login, timeline
 
 
 @pytest.fixture
@@ -30,16 +30,23 @@ def test_cli_group(runner):
     assert "apcli" in result.output
 
 
+def test_bsky_group(runner):
+    """Test that bsky group runs."""
+    result = runner.invoke(cli, ["bsky", "--help"])
+    assert result.exit_code == 0
+    assert "Commands for interacting with Bluesky" in result.output
+
+
 def test_login_command_help(runner):
     """Test login command help."""
-    result = runner.invoke(login, ["--help"])
+    result = runner.invoke(cli, ["bsky", "login", "--help"])
     assert result.exit_code == 0
     assert "Login" in result.output
 
 
 def test_timeline_command_help(runner):
     """Test timeline command help."""
-    result = runner.invoke(timeline, ["--help"])
+    result = runner.invoke(cli, ["bsky", "timeline", "--help"])
     assert result.exit_code == 0
     assert "View your timeline" in result.output
 
@@ -62,7 +69,7 @@ def test_login_success(mock_config_class, mock_client_class, runner, temp_config
     mock_config_class.return_value = mock_config
 
     # Run login
-    result = runner.invoke(login, ["--handle", "test.bsky.social", "--password", "testpass"])
+    result = runner.invoke(cli, ["bsky", "login", "--handle", "test.bsky.social", "--password", "testpass"])
 
     # Verify
     assert result.exit_code == 0
@@ -79,7 +86,7 @@ def test_timeline_not_logged_in(mock_config_class, mock_client_class, runner):
     mock_config.load_session.return_value = (None, None)
     mock_config_class.return_value = mock_config
 
-    result = runner.invoke(timeline)
+    result = runner.invoke(cli, ["bsky", "timeline"])
 
     assert result.exit_code == 1
     assert "Not logged in" in result.output
@@ -115,7 +122,7 @@ def test_timeline_success(mock_config_class, mock_client_class, runner):
     mock_config_class.return_value = mock_config
 
     # Run timeline
-    result = runner.invoke(timeline, ["--limit", "10"])
+    result = runner.invoke(cli, ["bsky", "timeline", "--limit", "10"])
 
     # Verify
     assert result.exit_code == 0
@@ -164,7 +171,7 @@ def test_timeline_with_pagination(mock_config_class, mock_client_class, runner):
     mock_config_class.return_value = mock_config
 
     # Run timeline with page 2
-    result = runner.invoke(timeline, ["--limit", "5", "--p", "2"])
+    result = runner.invoke(cli, ["bsky", "timeline", "--limit", "5", "--p", "2"])
 
     # Verify
     assert result.exit_code == 0

@@ -38,7 +38,16 @@ cli.help = textwrap.dedent(f"""\
 """).strip("\n")
 
 
-@cli.command()
+@click.group()
+def bsky():
+    """Commands for interacting with Bluesky."""
+    pass
+
+
+cli.add_command(bsky)
+
+
+@bsky.command()
 @click.option("--handle", prompt="Handle", help="Your Bluesky handle")
 @click.option("--password", prompt="Password", hide_input=True, help="Your Bluesky password")
 def login(handle: str, password: str):
@@ -62,7 +71,7 @@ def login(handle: str, password: str):
         raise SystemExit(1)
 
 
-@cli.command()
+@bsky.command()
 @click.option("--limit", default=10, help="Number of posts to show")
 @click.option("--p", "page", default=1, help="Page number to load")
 def timeline(limit: int, page: int):
@@ -71,7 +80,7 @@ def timeline(limit: int, page: int):
     handle, session_string = config.load_session()
 
     if not session_string:
-        console.print("[red]✗ Not logged in. Please run 'apcli login' first.[/red]")
+        console.print("[red]✗ Not logged in. Please run 'apcli bsky login' first.[/red]")
         raise SystemExit(1)
 
     try:
