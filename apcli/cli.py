@@ -1,5 +1,7 @@
 """CLI commands for apcli."""
 
+import textwrap
+
 import click
 from atproto import Client
 from rich.console import Console
@@ -9,11 +11,31 @@ from apcli.config import Config
 
 console = Console()
 
+APCLI_HEADER = r"""
+                 _ _ 
+  __ _ _ __  ___| (_)
+ / _` | '_ \/ __| | |
+| (_| | |_) | (__| | |
+ \__,_| .__/ \___|_|_|
+      |_|            
+""".strip("\n")
+
 
 @click.group()
 def cli():
     """apcli - A Python CLI wrapper around the atproto package."""
     pass
+
+
+cli.help = textwrap.dedent(f"""\
+\b
+{APCLI_HEADER}
+
+🦋 apcli - A Python CLI wrapper around the atproto package
+
+📚 GitHub: https://github.com/phalt/apcli
+
+""").strip("\n")
 
 
 @cli.command()
