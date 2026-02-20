@@ -5,7 +5,7 @@ The `timeline` command displays posts from your Bluesky timeline in a beautifull
 ## Basic Usage
 
 ```bash
-apcli timeline
+apcli bsky timeline
 ```
 
 This will display your timeline with the default limit of 10 posts.
@@ -13,12 +13,13 @@ This will display your timeline with the default limit of 10 posts.
 ## Command Options
 
 ```bash
-apcli timeline [OPTIONS]
+apcli bsky timeline [OPTIONS]
 ```
 
 ### Options
 
 - `--limit INTEGER`: Number of posts to show (default: 10)
+- `--p INTEGER`: Page number to load (default: 1)
 - `--help`: Show help message
 
 ## Examples
@@ -26,7 +27,7 @@ apcli timeline [OPTIONS]
 ### View Default Timeline (10 posts)
 
 ```bash
-apcli timeline
+apcli bsky timeline
 ```
 
 Output:
@@ -47,19 +48,32 @@ Showing 3 posts
 ### View More Posts
 
 ```bash
-apcli timeline --limit 20
+apcli bsky timeline --limit 20
 ```
 
 ### View Fewer Posts
 
 ```bash
-apcli timeline --limit 5
+apcli bsky timeline --limit 5
 ```
 
 ### View Maximum Posts
 
 ```bash
-apcli timeline --limit 50
+apcli bsky timeline --limit 50
+```
+
+### Navigate Through Pages
+
+```bash
+# View page 2
+apcli bsky timeline --p 2
+
+# View page 3
+apcli bsky timeline --p 3
+
+# View page 2 with 20 posts per page
+apcli bsky timeline --limit 20 --p 2
 ```
 
 ## Output Format
@@ -89,7 +103,7 @@ Displayed: "This is a very long post about my experience with the new technology
 Before using the timeline command, you must be logged in:
 
 ```bash
-apcli login
+apcli bsky login
 ```
 
 ## Authentication Errors
@@ -99,23 +113,23 @@ apcli login
 If you haven't logged in yet:
 
 ```bash
-$ apcli timeline
-✗ Not logged in. Please run 'apcli login' first.
+$ apcli bsky timeline
+✗ Not logged in. Please run 'apcli bsky login' first.
 ```
 
-**Solution**: Run `apcli login` first.
+**Solution**: Run `apcli bsky login` first.
 
 ### Session Expired
 
 If your session has expired:
 
 ```bash
-$ apcli timeline
+$ apcli bsky timeline
 ✗ Failed to load timeline: ...
 Your session may have expired. Try logging in again.
 ```
 
-**Solution**: Login again with `apcli login`.
+**Solution**: Login again with `apcli bsky login`.
 
 ## Performance
 
@@ -133,10 +147,10 @@ Add these to your shell config (`.bashrc`, `.zshrc`, etc.):
 
 ```bash
 # Quick timeline with different limits
-alias tl='apcli timeline'
-alias tl5='apcli timeline --limit 5'
-alias tl20='apcli timeline --limit 20'
-alias tl50='apcli timeline --limit 50'
+alias tl='apcli bsky timeline'
+alias tl5='apcli bsky timeline --limit 5'
+alias tl20='apcli bsky timeline --limit 20'
+alias tl50='apcli bsky timeline --limit 50'
 ```
 
 ### Script Integration
@@ -147,7 +161,7 @@ Use in shell scripts:
 #!/bin/bash
 # Check timeline and count posts
 
-posts=$(apcli timeline --limit 50 2>/dev/null | grep "Showing" | awk '{print $2}')
+posts=$(apcli bsky timeline --limit 50 2>/dev/null | grep "Showing" | awk '{print $2}')
 echo "You have $posts posts in your timeline"
 ```
 
