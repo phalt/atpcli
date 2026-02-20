@@ -1,8 +1,11 @@
 import re
+from typing import List, Optional
 
 from atproto_client.models.app.bsky.embed.images import View as ImagesView
 from atproto_client.models.app.bsky.embed.record_with_media import View as RecordWithMediaView
 from atproto_client.models.app.bsky.feed.defs import PostView
+from atproto_client.models.app.bsky.richtext.facet import Link as LinkFacet
+from atproto_client.models.app.bsky.richtext.facet import Main as FacetMain
 from rich.table import Table
 from rich.text import Text
 
@@ -26,15 +29,63 @@ def _at_uri_to_web_url(uri: str, handle: str) -> str:
     return uri
 
 
-def _render_text_with_links(text: str) -> Text:
+def _render_text_with_links(text: str, facets: Optional[List[FacetMain]] = None) -> Text:
     """Render text with clickable links.
 
     Args:
         text: The text to render
+        facets: Optional list of facets from the post record (for proper link detection)
 
     Returns:
         Rich Text object with clickable links
     """
+    rich_text = Text()
+
+    # If we have facets, use them for accurate link detection
+    # Facets use byte indices, so we need to encode/decode properly
+    if facets:
+        # Extract link facets and sort by byte position
+        link_facets = []
+        for facet in facets:
+            for feature in facet.features:
+                if isinstance(feature, LinkFacet):
+                    # ByteSlice uses byte offsets, not character offsets
+                    link_facets.append({
+                        'byte_start': facet.index.byte_start,
+                        'byte_end': facet.index.byte_end,
+                        'uri': feature.uri
+                    })
+
+        # Sort by byte position
+        link_facets.sort(key=lambda x: x['byte_start'])
+
+        # Convert text to bytes for proper indexing
+        text_bytes = text.encode('utf-8')
+        last_byte_end = 0
+
+        for link_facet in link_facets:
+            byte_start = link_facet['byte_start']
+            byte_end = link_facet['byte_end']
+            uri = link_facet['uri']
+
+            # Add text before the link
+            if byte_start > last_byte_end:
+                before_text = text_bytes[last_byte_end:byte_start].decode('utf-8')
+                rich_text.append(before_text)
+
+            # Add the link
+            link_text = text_bytes[byte_start:byte_end].decode('utf-8')
+            rich_text.append(link_text, style=f"link {uri}")
+            last_byte_end = byte_end
+
+        # Add any remaining text
+        if last_byte_end < len(text_bytes):
+            remaining_text = text_bytes[last_byte_end:].decode('utf-8')
+            rich_text.append(remaining_text)
+
+        return rich_text
+
+    # Fallback: use regex pattern matching if no facets available
     # Pattern to match URLs with or without protocol.
     # Matches:
     # 1. URLs starting with http:// or https://
@@ -48,7 +99,6 @@ def _render_text_with_links(text: str) -> Text:
         r'(?:https?://)?(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}(?:[^\s<>"{}|\\^`\[\]]*)?'
     )
 
-    rich_text = Text()
     last_end = 0
 
     for match in re.finditer(url_pattern, text):
@@ -116,9 +166,10 @@ def display_post(post: PostView) -> Table:
     table.add_column("Post", style="white", overflow="fold")
     table.add_column("Likes", justify="right", style="green", overflow="fold")
 
-    # Render text with clickable links
+    # Render text with clickable links using facets if available
     text = post.record.text if hasattr(post.record, "text") else ""
-    rendered_text = _render_text_with_links(text)
+    facets = post.record.facets if hasattr(post.record, "facets") else None
+    rendered_text = _render_text_with_links(text, facets)
 
     likes = post.like_count or 0
     table.add_row(rendered_text, str(likes))
