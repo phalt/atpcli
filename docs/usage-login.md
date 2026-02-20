@@ -5,7 +5,7 @@ The `login` command authenticates you with Bluesky and saves your session for fu
 ## Basic Usage
 
 ```bash
-uv run apcli login
+apcli login
 ```
 
 This will prompt you for your credentials interactively.
@@ -13,7 +13,7 @@ This will prompt you for your credentials interactively.
 ## Command Options
 
 ```bash
-uv run apcli login [OPTIONS]
+apcli login [OPTIONS]
 ```
 
 ### Options
@@ -27,7 +27,7 @@ uv run apcli login [OPTIONS]
 When you run the command without options, you'll be prompted:
 
 ```bash
-$ uv run apcli login
+$ apcli login
 Handle: alice.bsky.social
 Password: ****
 ✓ Successfully logged in as Alice
@@ -42,7 +42,7 @@ Session saved to /home/user/.config/apcli/config.json
 You can provide credentials as command-line options:
 
 ```bash
-uv run apcli login --handle alice.bsky.social --password your-app-password
+apcli login --handle alice.bsky.social --password your-app-password
 ```
 
 !!! warning "Security Risk"
@@ -79,7 +79,7 @@ The config file is a simple JSON file:
 To login with a different account, simply run `login` again:
 
 ```bash
-uv run apcli login
+apcli login
 ```
 
 This will overwrite the previous session.
@@ -147,7 +147,7 @@ To revoke apcli's access:
 ### First-time Login
 
 ```bash
-$ uv run apcli login
+$ apcli login
 Handle: alice.bsky.social
 Password: ****
 ✓ Successfully logged in as Alice
@@ -157,7 +157,7 @@ Session saved to /home/alice/.config/apcli/config.json
 ### Switching Accounts
 
 ```bash
-$ uv run apcli login
+$ apcli login
 Handle: bob.bsky.social
 Password: ****
 ✓ Successfully logged in as Bob
@@ -167,7 +167,7 @@ Session saved to /home/user/.config/apcli/config.json
 ### Login with Command-line Options
 
 ```bash
-$ uv run apcli login --handle alice.bsky.social --password xxxx-xxxx-xxxx-xxxx
+$ apcli login --handle alice.bsky.social --password xxxx-xxxx-xxxx-xxxx
 ✓ Successfully logged in as Alice
 Session saved to /home/alice/.config/apcli/config.json
 ```

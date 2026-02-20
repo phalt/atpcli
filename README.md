@@ -21,11 +21,13 @@ make docs-serve
 
 ### Installation
 
-Install using [uv](https://docs.astral.sh/uv/):
+Install globally using [uv](https://docs.astral.sh/uv/):
 
 ```bash
-uv pip install apcli
+uv tool install apcli
 ```
+
+This installs `apcli` as a global tool, making it available from anywhere in your terminal.
 
 Or for development:
 
@@ -44,7 +46,7 @@ make install
 Login to your Bluesky account and save the session:
 
 ```bash
-uv run apcli login
+apcli login
 ```
 
 You'll be prompted for your handle and password. The session will be saved to `~/.config/apcli/config.json`.
@@ -54,7 +56,7 @@ You'll be prompted for your handle and password. The session will be saved to `~
 View your timeline:
 
 ```bash
-uv run apcli timeline
+apcli timeline
 ```
 
 Options:
@@ -62,7 +64,7 @@ Options:
 
 Example:
 ```bash
-uv run apcli timeline --limit 20
+apcli timeline --limit 20
 ```
 
 ## Development
