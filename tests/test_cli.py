@@ -182,3 +182,76 @@ def test_timeline_with_pagination(mock_config_class, mock_client_class, runner):
     mock_client.login.assert_called_once_with(session_string="test_session")
     # Should be called twice: once to skip page 1, once to get page 2
     assert mock_client.get_timeline.call_count == 2
+
+
+def test_post_command_help(runner):
+    """Test post command help."""
+    result = runner.invoke(cli, ["bsky", "post", "--help"])
+    assert result.exit_code == 0
+    assert "Post a message to Bluesky" in result.output
+
+
+@patch("atpcli.cli.Client")
+@patch("atpcli.cli.Config")
+def test_post_not_logged_in(mock_config_class, mock_client_class, runner):
+    """Test post when not logged in."""
+    mock_config = MagicMock()
+    mock_config.load_session.return_value = (None, None)
+    mock_config_class.return_value = mock_config
+
+    result = runner.invoke(cli, ["bsky", "post", "--message", "Test post"])
+
+    assert result.exit_code == 1
+    assert "Not logged in" in result.output
+
+
+@patch("atpcli.cli.Client")
+@patch("atpcli.cli.Config")
+def test_post_success(mock_config_class, mock_client_class, runner):
+    """Test successful post."""
+    # Setup mocks
+    mock_client = MagicMock()
+    mock_client_class.return_value = mock_client
+
+    # Mock post response
+    mock_response = MagicMock()
+    mock_response.uri = "at://did:plc:test123/app.bsky.feed.post/abc123xyz"
+    mock_client.send_post.return_value = mock_response
+
+    # Mock config
+    mock_config = MagicMock()
+    mock_config.load_session.return_value = ("test.bsky.social", "test_session")
+    mock_config_class.return_value = mock_config
+
+    # Run post
+    result = runner.invoke(cli, ["bsky", "post", "--message", "Hello Bluesky!"])
+
+    # Verify
+    assert result.exit_code == 0
+    assert "Post created successfully" in result.output
+    assert "https://bsky.app/profile/test.bsky.social/post/abc123xyz" in result.output
+    mock_client.login.assert_called_once_with(session_string="test_session")
+    mock_client.send_post.assert_called_once_with(text="Hello Bluesky!")
+
+
+@patch("atpcli.cli.Client")
+@patch("atpcli.cli.Config")
+def test_post_failure(mock_config_class, mock_client_class, runner):
+    """Test post failure."""
+    # Setup mocks
+    mock_client = MagicMock()
+    mock_client_class.return_value = mock_client
+    mock_client.send_post.side_effect = Exception("Network error")
+
+    # Mock config
+    mock_config = MagicMock()
+    mock_config.load_session.return_value = ("test.bsky.social", "test_session")
+    mock_config_class.return_value = mock_config
+
+    # Run post
+    result = runner.invoke(cli, ["bsky", "post", "--message", "Hello Bluesky!"])
+
+    # Verify
+    assert result.exit_code == 1
+    assert "Failed to post" in result.output
+    assert "Network error" in result.output

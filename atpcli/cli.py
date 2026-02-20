@@ -131,5 +131,39 @@ def timeline(limit: int, page: int):
         raise SystemExit(1)
 
 
+@bsky.command()
+@click.option("--message", required=True, help="Message to post")
+def post(message: str):
+    """Post a message to Bluesky."""
+    config = Config()
+    handle, session_string = config.load_session()
+
+    if not session_string:
+        console.print("[red]✗ Not logged in. Please run 'atpcli bsky login' first.[/red]")
+        raise SystemExit(1)
+
+    try:
+        client = Client()
+        console.print(f"[blue]Posting as {handle}...[/blue]")
+
+        # Restore session from saved string
+        client.login(session_string=session_string)
+
+        # Send the post
+        response = client.send_post(text=message)
+
+        # Convert AT URI to web URL
+        post_id = response.uri.split("/")[-1]
+        web_url = f"https://bsky.app/profile/{handle}/post/{post_id}"
+
+        console.print(f"[green]✓ Post created successfully![/green]")
+        console.print(f"[blue]View your post at: [link={web_url}]{web_url}[/link][/blue]")
+
+    except Exception as e:
+        console.print(f"[red]✗ Failed to post: {e}[/red]")
+        console.print("[yellow]Your session may have expired. Try logging in again.[/yellow]")
+        raise SystemExit(1)
+
+
 if __name__ == "__main__":
     cli()
