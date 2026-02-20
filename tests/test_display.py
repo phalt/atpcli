@@ -61,6 +61,13 @@ def test_render_text_with_links_without_protocol():
     # The URL should be detected and styled as a link
     result_str = str(result)
     assert "github.com/phalt/atpcli" in result_str
+    # Verify it's actually a clickable link with https:// prepended
+    link_found = False
+    for span in result.spans:
+        if "link https://github.com/phalt/atpcli" in str(span.style):
+            link_found = True
+            break
+    assert link_found, "URL should be styled as a link with https:// protocol"
 
 
 def test_render_text_with_links_various_domains():
@@ -72,6 +79,11 @@ def test_render_text_with_links_various_domains():
     assert "example.com" in result_str
     assert "site.co.uk" in result_str
     assert "subdomain.example.org" in result_str
+    # Verify all three are clickable links with https://
+    expected_links = ["https://example.com", "https://site.co.uk", "https://subdomain.example.org"]
+    for expected_link in expected_links:
+        link_found = any(f"link {expected_link}" in str(span.style) for span in result.spans)
+        assert link_found, f"Should have clickable link: {expected_link}"
 
 
 def test_render_text_with_links_mixed_protocols():
@@ -82,6 +94,9 @@ def test_render_text_with_links_mixed_protocols():
     result_str = str(result)
     assert "https://example.com" in result_str
     assert "github.com/user/repo" in result_str
+    # Verify both have correct links (one already has https, one gets it added)
+    assert any("link https://example.com" in str(span.style) for span in result.spans)
+    assert any("link https://github.com/user/repo" in str(span.style) for span in result.spans)
 
 
 def test_render_text_with_links_single_char_domain():
@@ -91,6 +106,9 @@ def test_render_text_with_links_single_char_domain():
     assert isinstance(result, Text)
     result_str = str(result)
     assert "x.com" in result_str
+    # Verify it's a clickable link with https:// prepended
+    link_found = any("link https://x.com" in str(span.style) for span in result.spans)
+    assert link_found, "x.com should be styled as a link with https:// protocol"
 
 
 def test_display_post():
