@@ -35,22 +35,35 @@ def _render_text_with_links(text: str) -> Text:
     Returns:
         Rich Text object with clickable links
     """
-    # Pattern to match URLs. This is a simple pattern that works for most common URLs.
-    # It may not match all valid URLs (e.g., those with special characters or authentication)
-    # or may match some invalid ones, but it covers the majority of use cases.
-    url_pattern = r'https?://[^\s<>"{}|\\^`\[\]]+'
+    # Pattern to match URLs with or without protocol.
+    # Matches:
+    # 1. URLs starting with http:// or https://
+    # 2. Domain-like patterns (e.g., github.com/user/repo, example.com, x.com)
+    # The pattern looks for:
+    # - Optional protocol (https?://)
+    # - Domain name: alphanumeric segments with hyphens (but not at start/end) separated by dots
+    # - TLD with at least 2 letters
+    # - Optional path, query, and fragment
+    url_pattern = (
+        r'(?:https?://)?(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}(?:[^\s<>"{}|\\^`\[\]]*)?'
+    )
 
     rich_text = Text()
     last_end = 0
 
     for match in re.finditer(url_pattern, text):
+        matched_text = match.group()
+
         # Add text before the URL
         if match.start() > last_end:
-            rich_text.append(text[last_end:match.start()])
+            rich_text.append(text[last_end : match.start()])
 
         # Add the URL as a clickable link
-        url = match.group()
-        rich_text.append(url, style=f"link {url}")
+        # If the URL doesn't have a protocol, add https://
+        display_url = matched_text
+        link_url = matched_text if matched_text.startswith(("http://", "https://")) else f"https://{matched_text}"
+
+        rich_text.append(display_url, style=f"link {link_url}")
         last_end = match.end()
 
     # Add any remaining text
@@ -69,7 +82,7 @@ def _has_image(post: PostView) -> bool:
     Returns:
         True if the post has an image embed, False otherwise
     """
-    if not hasattr(post, 'embed') or post.embed is None:
+    if not hasattr(post, "embed") or post.embed is None:
         return False
 
     # Check if it's an images embed directly
@@ -78,7 +91,7 @@ def _has_image(post: PostView) -> bool:
 
     # Check if it's a record with media (quote post with images)
     if isinstance(post.embed, RecordWithMediaView):
-        if hasattr(post.embed, 'media') and isinstance(post.embed.media, ImagesView):
+        if hasattr(post.embed, "media") and isinstance(post.embed.media, ImagesView):
             return True
 
     return False
@@ -99,8 +112,9 @@ def display_post(post: PostView) -> Table:
     clickable_title = f"[link={web_url}]{title}[/link]"
 
     table = Table(title=clickable_title, show_header=True, expand=True)
-    table.add_column("Post", style="white")
-    table.add_column("Likes", justify="right", style="green")
+    # Use overflow="fold" to wrap text instead of truncating with ellipsis
+    table.add_column("Post", style="white", overflow="fold")
+    table.add_column("Likes", justify="right", style="green", overflow="fold")
 
     # Render text with clickable links
     text = post.record.text if hasattr(post.record, "text") else ""
