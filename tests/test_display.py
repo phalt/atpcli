@@ -281,7 +281,6 @@ def test_render_text_with_multiple_facets():
     # Verify both are clickable links
     assert any("link https://example.com" in str(span.style) for span in result.spans)
     assert any("link https://test.org!" in str(span.style) for span in result.spans)
-    assert any("link https://test.org!" in str(span.style) for span in result.spans)
 
 
 def test_render_text_with_unicode_and_facets():
