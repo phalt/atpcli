@@ -34,5 +34,4 @@ shell:  ## Run a Python shell
 	uv run python
 
 release:  ## Build a new version and release it
-	uv build
-	uv publish
+	uv build && uv publish
