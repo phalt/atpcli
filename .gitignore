@@ -6,10 +6,8 @@ env.ini
 __pycache__
 .DS_Store
 dist/
-.python-version
 htmlcov/
 *.coverage*
 coverage.xml
 .cache/
-uv.lock
 *.pyc
