@@ -2,7 +2,24 @@
 
 A Python CLI wrapper around the [atproto](https://github.com/MarshalX/atproto) package for interacting with Bluesky.
 
-## Installation
+## Documentation
+
+Full documentation is available at [docs/](docs/):
+
+- [Installation Guide](docs/install.md)
+- [Quick Start Guide](docs/getting-started.md) - Learn how to get app passwords and use apcli
+- [Login Command](docs/usage-login.md)
+- [Timeline Command](docs/usage-timeline.md)
+
+Or serve the docs locally:
+
+```bash
+make docs-serve
+```
+
+## Quick Start
+
+### Installation
 
 Install using [uv](https://docs.astral.sh/uv/):
 
@@ -21,6 +38,8 @@ make install
 ## Usage
 
 ### Login
+
+⚠️ **Security Note**: Use Bluesky app passwords, not your main password! See the [Quick Start Guide](docs/getting-started.md) for instructions on creating an app password.
 
 Login to your Bluesky account and save the session:
 
@@ -58,6 +77,18 @@ make install
 
 ```bash
 make test
+```
+
+### Build documentation
+
+```bash
+make docs-build
+```
+
+### Serve documentation locally
+
+```bash
+make docs-serve
 ```
 
 ### Format code
