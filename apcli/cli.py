@@ -5,16 +5,16 @@ import textwrap
 import click
 from atproto import Client
 from rich.console import Console
-from rich.table import Table
 
 from apcli.config import Config
+from apcli.display import display_post
 
 console = Console()
 
 APCLI_HEADER = r"""
-                 _ _
-  __ _ _ __  ___| (_)
- / _` | '_ \/ __| | |
+                  _  _
+  __ _ _ __  ____| (_)
+ / _` | '_ \/ ___| | |
 | (_| | |_) | (__| | |
  \__,_| .__/ \___|_|_|
       |_|
@@ -83,25 +83,11 @@ def timeline(limit: int):
         # Get timeline
         timeline_response = client.get_timeline(limit=limit)
 
-        # Display posts in a nice table
-        table = Table(title=f"Timeline for {handle}", show_header=True, header_style="bold magenta")
-        table.add_column("Author", style="cyan", no_wrap=True)
-        table.add_column("Post", style="white")
-        table.add_column("Likes", justify="right", style="green")
-
         for feed_view in timeline_response.feed:
             post = feed_view.post
-            author_display = post.author.display_name or post.author.handle
-            text = post.record.text if hasattr(post.record, "text") else ""
-            likes = post.like_count or 0
+            table = display_post(post)
+            console.print(table)
 
-            # Truncate long posts
-            if len(text) > 80:
-                text = text[:77] + "..."
-
-            table.add_row(author_display, text, str(likes))
-
-        console.print(table)
         console.print(f"\n[dim]Showing {len(timeline_response.feed)} posts[/dim]")
 
     except Exception as e:
