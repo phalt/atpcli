@@ -1,6 +1,5 @@
 """CLI commands for apcli."""
 
-
 import click
 from atproto import Client
 from rich.console import Console
@@ -38,7 +37,7 @@ def login(handle: str, password: str):
         console.print(f"[dim]Session saved to {config.config_file}[/dim]")
     except Exception as e:
         console.print(f"[red]✗ Login failed: {e}[/red]")
-        raise click.Abort()
+        raise SystemExit(1)
 
 
 @cli.command()
@@ -50,7 +49,7 @@ def timeline(limit: int):
 
     if not session_string:
         console.print("[red]✗ Not logged in. Please run 'apcli login' first.[/red]")
-        raise click.Abort()
+        raise SystemExit(1)
 
     try:
         client = Client()
@@ -86,7 +85,7 @@ def timeline(limit: int):
     except Exception as e:
         console.print(f"[red]✗ Failed to load timeline: {e}[/red]")
         console.print("[yellow]Your session may have expired. Try logging in again.[/yellow]")
-        raise click.Abort()
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

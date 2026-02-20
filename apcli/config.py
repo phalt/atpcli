@@ -21,7 +21,7 @@ class Config:
         config_data = self.load_config()
         config_data["handle"] = handle
         config_data["session"] = session_string
-        with open(self.config_file, "w") as f:
+        with open(self.config_file, "w", encoding="utf-8") as f:
             json.dump(config_data, f, indent=2)
 
     def load_session(self) -> tuple[Optional[str], Optional[str]]:
@@ -33,7 +33,7 @@ class Config:
         """Load the entire config file."""
         if not self.config_file.exists():
             return {}
-        with open(self.config_file, "r") as f:
+        with open(self.config_file, "r", encoding="utf-8") as f:
             return json.load(f)
 
     def clear_session(self) -> None:
