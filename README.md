@@ -10,6 +10,7 @@ Full documentation is available at [docs/](docs/):
 - [Quick Start Guide](docs/getting-started.md) - Learn how to get app passwords and use atpcli
 - [Login Command](docs/usage-login.md)
 - [Timeline Command](docs/usage-timeline.md)
+- [Post Command](docs/usage-post.md)
 
 Or serve the docs locally:
 
@@ -68,6 +69,16 @@ Example:
 atpcli bsky timeline --limit 20
 atpcli bsky timeline --p 2
 ```
+
+### Post Messages
+
+Create a post on Bluesky:
+
+```bash
+atpcli bsky post --message 'Hello, Bluesky!'
+```
+
+**Note:** When using special characters like `!`, use single quotes to avoid shell expansion issues. See the [Post Command documentation](docs/usage-post.md) for more details.
 
 ## Development
 

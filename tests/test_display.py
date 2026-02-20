@@ -201,3 +201,145 @@ def test_display_post_with_image():
     # Check that the title contains the camera emoji
     assert "📷" in table.title
     assert "Test User" in table.title
+
+
+def test_render_text_with_facets():
+    """Test rendering text with facets for link detection."""
+    from atproto_client.models.app.bsky.richtext.facet import ByteSlice
+    from atproto_client.models.app.bsky.richtext.facet import Link as LinkFacet
+    from atproto_client.models.app.bsky.richtext.facet import Main as FacetMain
+
+    # Test text with a link containing special characters like !
+    text = "Check out https://wagtail.org/blog/the-100! for more info"
+
+    # Create a facet for the link (byte positions)
+    link_start = text.index("https://wagtail.org/blog/the-100!")
+    link_end = link_start + len("https://wagtail.org/blog/the-100!")
+
+    # Get byte positions
+    byte_start = len(text[:link_start].encode("utf-8"))
+    byte_end = len(text[:link_end].encode("utf-8"))
+
+    facet = FacetMain(
+        index=ByteSlice(byte_start=byte_start, byte_end=byte_end),
+        features=[LinkFacet(uri="https://wagtail.org/blog/the-100!")],
+    )
+
+    result = _render_text_with_links(text, facets=[facet])
+    assert isinstance(result, Text)
+    result_str = str(result)
+    # The full link including ! should be present
+    assert "https://wagtail.org/blog/the-100!" in result_str
+
+    # Verify it's a clickable link with the correct URI
+    link_found = False
+    for span in result.spans:
+        if "link https://wagtail.org/blog/the-100!" in str(span.style):
+            link_found = True
+            break
+    assert link_found, "Full link with ! should be clickable"
+
+
+def test_render_text_with_multiple_facets():
+    """Test rendering text with multiple link facets."""
+    from atproto_client.models.app.bsky.richtext.facet import ByteSlice
+    from atproto_client.models.app.bsky.richtext.facet import Link as LinkFacet
+    from atproto_client.models.app.bsky.richtext.facet import Main as FacetMain
+
+    text = "Visit https://example.com and https://test.org!"
+
+    # Create facets for both links
+    link1_start = text.index("https://example.com")
+    link1_end = link1_start + len("https://example.com")
+    byte1_start = len(text[:link1_start].encode("utf-8"))
+    byte1_end = len(text[:link1_end].encode("utf-8"))
+
+    link2_start = text.index("https://test.org!")
+    link2_end = link2_start + len("https://test.org!")
+    byte2_start = len(text[:link2_start].encode("utf-8"))
+    byte2_end = len(text[:link2_end].encode("utf-8"))
+
+    facets = [
+        FacetMain(
+            index=ByteSlice(byte_start=byte1_start, byte_end=byte1_end),
+            features=[LinkFacet(uri="https://example.com")],
+        ),
+        FacetMain(
+            index=ByteSlice(byte_start=byte2_start, byte_end=byte2_end),
+            features=[LinkFacet(uri="https://test.org!")],
+        ),
+    ]
+
+    result = _render_text_with_links(text, facets=facets)
+    assert isinstance(result, Text)
+    result_str = str(result)
+    assert "https://example.com" in result_str
+    assert "https://test.org!" in result_str
+
+    # Verify both are clickable links
+    assert any("link https://example.com" in str(span.style) for span in result.spans)
+    assert any("link https://test.org!" in str(span.style) for span in result.spans)
+
+
+def test_render_text_with_unicode_and_facets():
+    """Test rendering text with unicode characters and facets."""
+    from atproto_client.models.app.bsky.richtext.facet import ByteSlice
+    from atproto_client.models.app.bsky.richtext.facet import Link as LinkFacet
+    from atproto_client.models.app.bsky.richtext.facet import Main as FacetMain
+
+    # Text with emoji (multi-byte character) before the link
+    text = "🔥 Hot news: https://example.com/news"
+
+    link_start = text.index("https://example.com/news")
+    link_end = link_start + len("https://example.com/news")
+
+    # Important: byte positions, not character positions
+    byte_start = len(text[:link_start].encode("utf-8"))
+    byte_end = len(text[:link_end].encode("utf-8"))
+
+    facet = FacetMain(
+        index=ByteSlice(byte_start=byte_start, byte_end=byte_end),
+        features=[LinkFacet(uri="https://example.com/news")],
+    )
+
+    result = _render_text_with_links(text, facets=[facet])
+    assert isinstance(result, Text)
+    result_str = str(result)
+    assert "🔥" in result_str
+    assert "https://example.com/news" in result_str
+    assert any("link https://example.com/news" in str(span.style) for span in result.spans)
+
+
+def test_display_post_with_facets():
+    """Test displaying a post with facets for proper link rendering."""
+    from atproto_client.models.app.bsky.richtext.facet import ByteSlice
+    from atproto_client.models.app.bsky.richtext.facet import Link as LinkFacet
+    from atproto_client.models.app.bsky.richtext.facet import Main as FacetMain
+
+    mock_post = MagicMock()
+    mock_post.author.display_name = "Test User"
+    mock_post.author.handle = "test.bsky.social"
+    text = "Check out https://wagtail.org/blog/the-100! for more"
+    mock_post.record.text = text
+    mock_post.like_count = 5
+    mock_post.uri = "at://did:plc:test123/app.bsky.feed.post/abc123"
+
+    # Create facet for the link with !
+    link_start = text.index("https://wagtail.org/blog/the-100!")
+    link_end = link_start + len("https://wagtail.org/blog/the-100!")
+    byte_start = len(text[:link_start].encode("utf-8"))
+    byte_end = len(text[:link_end].encode("utf-8"))
+
+    facet = FacetMain(
+        index=ByteSlice(byte_start=byte_start, byte_end=byte_end),
+        features=[LinkFacet(uri="https://wagtail.org/blog/the-100!")],
+    )
+    mock_post.record.facets = [facet]
+
+    table = display_post(mock_post)
+
+    # The table should contain the full link with !
+    assert len(table.rows) == 1
+    # Verify that the rendering function was called with facets
+    rendered = _render_text_with_links(text, facets=[facet])
+    assert "https://wagtail.org/blog/the-100!" in str(rendered)
