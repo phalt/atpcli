@@ -100,7 +100,11 @@ def timeline(limit: int, page: int):
         # Get the requested page
         timeline_response = client.get_timeline(limit=limit, cursor=cursor)
 
-        for feed_view in timeline_response.feed:
+        # Reverse the feed so latest posts appear at the bottom
+        # This allows users to scroll up to read
+        reversed_feed = list(reversed(timeline_response.feed))
+
+        for feed_view in reversed_feed:
             post = feed_view.post
             table = display_post(post)
             console.print(table)

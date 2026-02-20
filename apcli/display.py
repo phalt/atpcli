@@ -1,5 +1,7 @@
 import re
 
+from atproto_client.models.app.bsky.embed.images import View as ImagesView
+from atproto_client.models.app.bsky.embed.record_with_media import View as RecordWithMediaView
 from atproto_client.models.app.bsky.feed.defs import PostView
 from rich.table import Table
 from rich.text import Text
@@ -58,6 +60,30 @@ def _render_text_with_links(text: str) -> Text:
     return rich_text
 
 
+def _has_image(post: PostView) -> bool:
+    """Check if a post has an image embed.
+
+    Args:
+        post: The post to check
+
+    Returns:
+        True if the post has an image embed, False otherwise
+    """
+    if not hasattr(post, 'embed') or post.embed is None:
+        return False
+
+    # Check if it's an images embed directly
+    if isinstance(post.embed, ImagesView):
+        return True
+
+    # Check if it's a record with media (quote post with images)
+    if isinstance(post.embed, RecordWithMediaView):
+        if hasattr(post.embed, 'media') and isinstance(post.embed.media, ImagesView):
+            return True
+
+    return False
+
+
 def display_post(post: PostView) -> Table:
     """Display a post in the terminal as a table."""
     # Convert AT URI to web URL
@@ -65,6 +91,11 @@ def display_post(post: PostView) -> Table:
 
     # Create clickable title
     title = f"{post.author.display_name} (@{post.author.handle})"
+
+    # Add image indicator if post has images
+    if _has_image(post):
+        title = f"📷 {title}"
+
     clickable_title = f"[link={web_url}]{title}[/link]"
 
     table = Table(title=clickable_title, show_header=True, expand=True)
