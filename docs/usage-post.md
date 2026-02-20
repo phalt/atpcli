@@ -81,7 +81,8 @@ Other characters that may need escaping in double quotes:
 
 **Best Practice:** Use single quotes for messages unless you need variable expansion:
 ```bash
-atpcli bsky post --message 'My message with $pecial ch@racters!'
+# Single quotes prevent shell interpretation of special characters
+atpcli bsky post --message 'My message with special characters: $ ! @ #'
 ```
 
 ## Character Limits

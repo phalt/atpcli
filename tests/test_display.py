@@ -249,6 +249,8 @@ def test_render_text_with_multiple_facets():
     text = "Visit https://example.com and https://test.org!"
 
     # Create facets for both links
+    # Note: The second link includes ! as part of the URL path, which is valid.
+    # This tests that facets properly handle URLs with special characters in them.
     link1_start = text.index("https://example.com")
     link1_end = link1_start + len("https://example.com")
     byte1_start = len(text[:link1_start].encode("utf-8"))
@@ -278,6 +280,7 @@ def test_render_text_with_multiple_facets():
 
     # Verify both are clickable links
     assert any("link https://example.com" in str(span.style) for span in result.spans)
+    assert any("link https://test.org!" in str(span.style) for span in result.spans)
     assert any("link https://test.org!" in str(span.style) for span in result.spans)
 
 
