@@ -46,7 +46,7 @@ def _render_text_with_links(text: str) -> Text:
     for match in re.finditer(url_pattern, text):
         # Add text before the URL
         if match.start() > last_end:
-            rich_text.append(text[last_end:match.start()])
+            rich_text.append(text[last_end : match.start()])
 
         # Add the URL as a clickable link
         url = match.group()
@@ -69,7 +69,7 @@ def _has_image(post: PostView) -> bool:
     Returns:
         True if the post has an image embed, False otherwise
     """
-    if not hasattr(post, 'embed') or post.embed is None:
+    if not hasattr(post, "embed") or post.embed is None:
         return False
 
     # Check if it's an images embed directly
@@ -78,7 +78,7 @@ def _has_image(post: PostView) -> bool:
 
     # Check if it's a record with media (quote post with images)
     if isinstance(post.embed, RecordWithMediaView):
-        if hasattr(post.embed, 'media') and isinstance(post.embed.media, ImagesView):
+        if hasattr(post.embed, "media") and isinstance(post.embed.media, ImagesView):
             return True
 
     return False

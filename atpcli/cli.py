@@ -156,7 +156,7 @@ def post(message: str):
         post_id = response.uri.split("/")[-1]
         web_url = f"https://bsky.app/profile/{handle}/post/{post_id}"
 
-        console.print(f"[green]✓ Post created successfully![/green]")
+        console.print("[green]✓ Post created successfully![/green]")
         console.print(f"[blue]View your post at: [link={web_url}]{web_url}[/link][/blue]")
 
     except Exception as e:
