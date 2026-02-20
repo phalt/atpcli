@@ -38,7 +38,16 @@ cli.help = textwrap.dedent(f"""\
 """).strip("\n")
 
 
-@cli.command()
+@click.group()
+def bsky():
+    """Commands for interacting with Bluesky."""
+    pass
+
+
+cli.add_command(bsky)
+
+
+@bsky.command()
 @click.option("--handle", prompt="Handle", help="Your Bluesky handle")
 @click.option("--password", prompt="Password", hide_input=True, help="Your Bluesky password")
 def login(handle: str, password: str):
@@ -62,15 +71,16 @@ def login(handle: str, password: str):
         raise SystemExit(1)
 
 
-@cli.command()
+@bsky.command()
 @click.option("--limit", default=10, help="Number of posts to show")
-def timeline(limit: int):
+@click.option("--p", "page", default=1, help="Page number to load")
+def timeline(limit: int, page: int):
     """View your timeline."""
     config = Config()
     handle, session_string = config.load_session()
 
     if not session_string:
-        console.print("[red]✗ Not logged in. Please run 'apcli login' first.[/red]")
+        console.print("[red]✗ Not logged in. Please run 'apcli bsky login' first.[/red]")
         raise SystemExit(1)
 
     try:
@@ -80,15 +90,40 @@ def timeline(limit: int):
         # Restore session from saved string
         client.login(session_string=session_string)
 
-        # Get timeline
-        timeline_response = client.get_timeline(limit=limit)
+        # Calculate cursor position for pagination
+        # Note: We need to fetch pages sequentially to get the cursor for each page.
+        # This means accessing page N requires N API calls, which can be slow for high page numbers.
+        cursor = None
+        if page > 5:
+            warning_msg = f"[yellow]⚠ Loading page {page} requires {page} API calls. This may take a moment...[/yellow]"
+            console.print(warning_msg)
 
-        for feed_view in timeline_response.feed:
+        for i in range(1, page):
+            response = client.get_timeline(limit=limit, cursor=cursor)
+            cursor = response.cursor
+            if not cursor:
+                console.print(f"[yellow]⚠ Page {page} does not exist. Showing last available page (page {i}).[/yellow]")
+                page = i
+                break
+
+        # Get the requested page
+        timeline_response = client.get_timeline(limit=limit, cursor=cursor)
+
+        # Reverse the feed so latest posts appear at the bottom
+        # This allows users to scroll up to read
+        reversed_feed = list(reversed(timeline_response.feed))
+
+        for feed_view in reversed_feed:
             post = feed_view.post
             table = display_post(post)
             console.print(table)
 
-        console.print(f"\n[dim]Showing {len(timeline_response.feed)} posts[/dim]")
+        # Show pagination info
+        page_info = f"[dim]Showing {len(timeline_response.feed)} posts (page {page})"
+        if timeline_response.cursor:
+            page_info += f" - Use --p {page + 1} for next page"
+        page_info += "[/dim]"
+        console.print(f"\n{page_info}")
 
     except Exception as e:
         console.print(f"[red]✗ Failed to load timeline: {e}[/red]")

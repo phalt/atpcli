@@ -32,7 +32,7 @@ For security reasons, apcli uses **app passwords** instead of your main Bluesky 
 Once you have your app password, you can login to apcli:
 
 ```bash
-apcli login
+apcli bsky login
 ```
 
 You'll be prompted for:
@@ -43,7 +43,7 @@ You'll be prompted for:
 Example:
 
 ```bash
-$ apcli login
+$ apcli bsky login
 Handle: alice.bsky.social
 Password: ****
 ✓ Successfully logged in as Alice
@@ -58,7 +58,7 @@ Session saved to /home/user/.config/apcli/config.json
 Now that you're logged in, you can view your timeline:
 
 ```bash
-apcli timeline
+apcli bsky timeline
 ```
 
 This will display your timeline with:
@@ -73,13 +73,28 @@ You can control how many posts to show using the `--limit` flag:
 
 ```bash
 # Show 5 posts
-apcli timeline --limit 5
+apcli bsky timeline --limit 5
 
 # Show 20 posts
-apcli timeline --limit 20
+apcli bsky timeline --limit 20
 
 # Show 50 posts
-apcli timeline --limit 50
+apcli bsky timeline --limit 50
+```
+
+### Navigate Through Pages
+
+Use the `--p` flag to navigate through different pages:
+
+```bash
+# View page 1 (default)
+apcli bsky timeline
+
+# View page 2
+apcli bsky timeline --p 2
+
+# View page 3 with 20 posts per page
+apcli bsky timeline --limit 20 --p 3
 ```
 
 Example output:
@@ -103,10 +118,10 @@ Showing 3 posts
 If you see this error:
 
 ```
-✗ Not logged in. Please run 'apcli login' first.
+✗ Not logged in. Please run 'apcli bsky login' first.
 ```
 
-Simply run `apcli login` to authenticate.
+Simply run `apcli bsky login` to authenticate.
 
 ### "Login failed" Error
 
@@ -121,7 +136,7 @@ This usually means:
 If your session expires, simply login again:
 
 ```bash
-apcli login
+apcli bsky login
 ```
 
 ## Security Best Practices

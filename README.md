@@ -46,7 +46,7 @@ make install
 Login to your Bluesky account and save the session:
 
 ```bash
-apcli login
+apcli bsky login
 ```
 
 You'll be prompted for your handle and password. The session will be saved to `~/.config/apcli/config.json`.
@@ -56,15 +56,17 @@ You'll be prompted for your handle and password. The session will be saved to `~
 View your timeline:
 
 ```bash
-apcli timeline
+apcli bsky timeline
 ```
 
 Options:
 - `--limit N` - Show N posts (default: 10)
+- `--p N` - Show page N (default: 1)
 
 Example:
 ```bash
-apcli timeline --limit 20
+apcli bsky timeline --limit 20
+apcli bsky timeline --p 2
 ```
 
 ## Development

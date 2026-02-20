@@ -18,10 +18,10 @@ apcli is a minimal command-line interface for interacting with [Bluesky](https:/
 
 ```bash
 # Login to Bluesky
-apcli login
+apcli bsky login
 
 # View your timeline
-apcli timeline --limit 10
+apcli bsky timeline --limit 10
 ```
 
 ## Why use apcli?
