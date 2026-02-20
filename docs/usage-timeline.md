@@ -5,7 +5,7 @@ The `timeline` command displays posts from your Bluesky timeline in a beautifull
 ## Basic Usage
 
 ```bash
-uv run apcli timeline
+apcli timeline
 ```
 
 This will display your timeline with the default limit of 10 posts.
@@ -13,7 +13,7 @@ This will display your timeline with the default limit of 10 posts.
 ## Command Options
 
 ```bash
-uv run apcli timeline [OPTIONS]
+apcli timeline [OPTIONS]
 ```
 
 ### Options
@@ -26,7 +26,7 @@ uv run apcli timeline [OPTIONS]
 ### View Default Timeline (10 posts)
 
 ```bash
-uv run apcli timeline
+apcli timeline
 ```
 
 Output:
@@ -47,19 +47,19 @@ Showing 3 posts
 ### View More Posts
 
 ```bash
-uv run apcli timeline --limit 20
+apcli timeline --limit 20
 ```
 
 ### View Fewer Posts
 
 ```bash
-uv run apcli timeline --limit 5
+apcli timeline --limit 5
 ```
 
 ### View Maximum Posts
 
 ```bash
-uv run apcli timeline --limit 50
+apcli timeline --limit 50
 ```
 
 ## Output Format
@@ -89,7 +89,7 @@ Displayed: "This is a very long post about my experience with the new technology
 Before using the timeline command, you must be logged in:
 
 ```bash
-uv run apcli login
+apcli login
 ```
 
 ## Authentication Errors
@@ -99,23 +99,23 @@ uv run apcli login
 If you haven't logged in yet:
 
 ```bash
-$ uv run apcli timeline
+$ apcli timeline
 ✗ Not logged in. Please run 'apcli login' first.
 ```
 
-**Solution**: Run `uv run apcli login` first.
+**Solution**: Run `apcli login` first.
 
 ### Session Expired
 
 If your session has expired:
 
 ```bash
-$ uv run apcli timeline
+$ apcli timeline
 ✗ Failed to load timeline: ...
 Your session may have expired. Try logging in again.
 ```
 
-**Solution**: Login again with `uv run apcli login`.
+**Solution**: Login again with `apcli login`.
 
 ## Performance
 
@@ -133,10 +133,10 @@ Add these to your shell config (`.bashrc`, `.zshrc`, etc.):
 
 ```bash
 # Quick timeline with different limits
-alias tl='uv run apcli timeline'
-alias tl5='uv run apcli timeline --limit 5'
-alias tl20='uv run apcli timeline --limit 20'
-alias tl50='uv run apcli timeline --limit 50'
+alias tl='apcli timeline'
+alias tl5='apcli timeline --limit 5'
+alias tl20='apcli timeline --limit 20'
+alias tl50='apcli timeline --limit 50'
 ```
 
 ### Script Integration
@@ -147,7 +147,7 @@ Use in shell scripts:
 #!/bin/bash
 # Check timeline and count posts
 
-posts=$(uv run apcli timeline --limit 50 2>/dev/null | grep "Showing" | awk '{print $2}')
+posts=$(apcli timeline --limit 50 2>/dev/null | grep "Showing" | awk '{print $2}')
 echo "You have $posts posts in your timeline"
 ```
 

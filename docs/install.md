@@ -29,6 +29,22 @@ powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
 
 ## Installing apcli
 
+### As a Global Tool (Recommended)
+
+Install apcli globally using uv's tool management:
+
+```bash
+uv tool install apcli
+```
+
+This makes the `apcli` command available system-wide, so you can run it from anywhere in your terminal without needing `uv run` or activating a virtual environment.
+
+After installation, verify it works:
+
+```bash
+apcli --help
+```
+
 ### From Source (Development)
 
 Clone the repository and install:
@@ -41,13 +57,17 @@ uv sync
 
 This will create a virtual environment and install all dependencies.
 
-### Using uv (when published to PyPI)
+### Using uv pip (Alternative)
+
+If you prefer to install in a specific virtual environment:
 
 ```bash
 uv pip install apcli
 ```
 
-### Using pip (when published to PyPI)
+Note: With this method, you'll need to use `uv run apcli` or activate the virtual environment first.
+
+### Using pip (Alternative)
 
 ```bash
 pip install apcli
@@ -58,7 +78,7 @@ pip install apcli
 After installation, verify that apcli is working:
 
 ```bash
-uv run apcli --help
+apcli --help
 ```
 
 You should see the help message with available commands:

@@ -32,7 +32,7 @@ For security reasons, apcli uses **app passwords** instead of your main Bluesky 
 Once you have your app password, you can login to apcli:
 
 ```bash
-uv run apcli login
+apcli login
 ```
 
 You'll be prompted for:
@@ -43,7 +43,7 @@ You'll be prompted for:
 Example:
 
 ```bash
-$ uv run apcli login
+$ apcli login
 Handle: alice.bsky.social
 Password: ****
 ✓ Successfully logged in as Alice
@@ -58,7 +58,7 @@ Session saved to /home/user/.config/apcli/config.json
 Now that you're logged in, you can view your timeline:
 
 ```bash
-uv run apcli timeline
+apcli timeline
 ```
 
 This will display your timeline with:
@@ -73,13 +73,13 @@ You can control how many posts to show using the `--limit` flag:
 
 ```bash
 # Show 5 posts
-uv run apcli timeline --limit 5
+apcli timeline --limit 5
 
 # Show 20 posts
-uv run apcli timeline --limit 20
+apcli timeline --limit 20
 
 # Show 50 posts
-uv run apcli timeline --limit 50
+apcli timeline --limit 50
 ```
 
 Example output:
@@ -106,7 +106,7 @@ If you see this error:
 ✗ Not logged in. Please run 'apcli login' first.
 ```
 
-Simply run `uv run apcli login` to authenticate.
+Simply run `apcli login` to authenticate.
 
 ### "Login failed" Error
 
@@ -121,7 +121,7 @@ This usually means:
 If your session expires, simply login again:
 
 ```bash
-uv run apcli login
+apcli login
 ```
 
 ## Security Best Practices
