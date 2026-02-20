@@ -1,13 +1,78 @@
+import re
+
 from atproto_client.models.app.bsky.feed.defs import PostView
 from rich.table import Table
+from rich.text import Text
+
+
+def _at_uri_to_web_url(uri: str, handle: str) -> str:
+    """Convert AT protocol URI to Bluesky web URL.
+    
+    Args:
+        uri: AT protocol URI (e.g., at://did:plc:xxx/app.bsky.feed.post/yyy)
+        handle: User handle
+        
+    Returns:
+        Bluesky web URL (e.g., https://bsky.app/profile/{handle}/post/{post_id})
+    """
+    # Extract post ID from AT URI
+    # Format: at://did:plc:xxx/app.bsky.feed.post/yyy
+    parts = uri.split("/")
+    if len(parts) >= 5 and parts[3] == "app.bsky.feed.post":
+        post_id = parts[4]
+        return f"https://bsky.app/profile/{handle}/post/{post_id}"
+    return uri
+
+
+def _render_text_with_links(text: str) -> Text:
+    """Render text with clickable links.
+    
+    Args:
+        text: The text to render
+        
+    Returns:
+        Rich Text object with clickable links
+    """
+    # Pattern to match URLs
+    url_pattern = r'https?://[^\s<>"{}|\\^`\[\]]+'
+    
+    rich_text = Text()
+    last_end = 0
+    
+    for match in re.finditer(url_pattern, text):
+        # Add text before the URL
+        if match.start() > last_end:
+            rich_text.append(text[last_end:match.start()])
+        
+        # Add the URL as a clickable link
+        url = match.group()
+        rich_text.append(url, style=f"link {url}")
+        last_end = match.end()
+    
+    # Add any remaining text
+    if last_end < len(text):
+        rich_text.append(text[last_end:])
+    
+    return rich_text
 
 
 def display_post(post: PostView) -> Table:
     """Display a post in the terminal as a table."""
-    table = Table(title=f"{post.author.display_name} (@{post.author.handle})", show_header=True, expand=True)
+    # Convert AT URI to web URL
+    web_url = _at_uri_to_web_url(post.uri, post.author.handle)
+    
+    # Create clickable title
+    title = f"{post.author.display_name} (@{post.author.handle})"
+    clickable_title = f"[link={web_url}]{title}[/link]"
+    
+    table = Table(title=clickable_title, show_header=True, expand=True)
     table.add_column("Post", style="white")
     table.add_column("Likes", justify="right", style="green")
+    
+    # Render text with clickable links
     text = post.record.text if hasattr(post.record, "text") else ""
+    rendered_text = _render_text_with_links(text)
+    
     likes = post.like_count or 0
-    table.add_row(text, str(likes))
+    table.add_row(rendered_text, str(likes))
     return table

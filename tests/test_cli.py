@@ -99,12 +99,14 @@ def test_timeline_success(mock_config_class, mock_client_class, runner):
     mock_post.author.handle = "test.bsky.social"
     mock_post.record.text = "Test post"
     mock_post.like_count = 5
+    mock_post.uri = "at://did:plc:test123/app.bsky.feed.post/abc123"
 
     mock_feed_view = MagicMock()
     mock_feed_view.post = mock_post
 
     mock_timeline = MagicMock()
     mock_timeline.feed = [mock_feed_view]
+    mock_timeline.cursor = None
     mock_client.get_timeline.return_value = mock_timeline
 
     # Mock config
@@ -122,4 +124,54 @@ def test_timeline_success(mock_config_class, mock_client_class, runner):
     assert "Test post" in result.output
     assert "Showing 1 posts" in result.output
     mock_client.login.assert_called_once_with(session_string="test_session")
-    mock_client.get_timeline.assert_called_once_with(limit=10)
+    mock_client.get_timeline.assert_called_once_with(limit=10, cursor=None)
+
+
+@patch("apcli.cli.Client")
+@patch("apcli.cli.Config")
+def test_timeline_with_pagination(mock_config_class, mock_client_class, runner):
+    """Test timeline with pagination."""
+    # Setup mocks
+    mock_client = MagicMock()
+    mock_client_class.return_value = mock_client
+
+    # Mock timeline response for page 1
+    mock_timeline_page1 = MagicMock()
+    mock_timeline_page1.feed = []
+    mock_timeline_page1.cursor = "cursor_page_2"
+
+    # Mock timeline response for page 2
+    mock_post = MagicMock()
+    mock_post.author.display_name = "Test Author"
+    mock_post.author.handle = "test.bsky.social"
+    mock_post.record.text = "Test post on page 2"
+    mock_post.like_count = 3
+    mock_post.uri = "at://did:plc:test123/app.bsky.feed.post/xyz789"
+
+    mock_feed_view = MagicMock()
+    mock_feed_view.post = mock_post
+
+    mock_timeline_page2 = MagicMock()
+    mock_timeline_page2.feed = [mock_feed_view]
+    mock_timeline_page2.cursor = "cursor_page_3"
+
+    # Mock get_timeline to return different responses
+    mock_client.get_timeline.side_effect = [mock_timeline_page1, mock_timeline_page2]
+
+    # Mock config
+    mock_config = MagicMock()
+    mock_config.load_session.return_value = ("test.bsky.social", "test_session")
+    mock_config_class.return_value = mock_config
+
+    # Run timeline with page 2
+    result = runner.invoke(timeline, ["--limit", "5", "--p", "2"])
+
+    # Verify
+    assert result.exit_code == 0
+    assert "Loading timeline for test.bsky.social" in result.output
+    assert "Test post on page 2" in result.output
+    assert "page 2" in result.output
+    assert "--p 3" in result.output  # Should show next page hint
+    mock_client.login.assert_called_once_with(session_string="test_session")
+    # Should be called twice: once to skip page 1, once to get page 2
+    assert mock_client.get_timeline.call_count == 2
