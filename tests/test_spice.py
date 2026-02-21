@@ -276,7 +276,7 @@ def test_list_with_pagination(mock_config_class, mock_client_class, runner):
     mock_response2.records = [mock_record2]
     mock_response2.cursor = None
 
-    # Mock get_timeline to return different responses
+    # Mock list_records to return different responses for pagination
     mock_client.com.atproto.repo.list_records.side_effect = [mock_response1, mock_response2]
 
     # Mock config
