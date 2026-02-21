@@ -50,37 +50,35 @@ def _render_text_with_links(text: str, facets: Optional[List[FacetMain]] = None)
             for feature in facet.features:
                 if isinstance(feature, LinkFacet):
                     # ByteSlice uses byte offsets, not character offsets
-                    link_facets.append({
-                        'byte_start': facet.index.byte_start,
-                        'byte_end': facet.index.byte_end,
-                        'uri': feature.uri
-                    })
+                    link_facets.append(
+                        {"byte_start": facet.index.byte_start, "byte_end": facet.index.byte_end, "uri": feature.uri}
+                    )
 
         # Sort by byte position
-        link_facets.sort(key=lambda x: x['byte_start'])
+        link_facets.sort(key=lambda x: x["byte_start"])
 
         # Convert text to bytes for proper indexing
-        text_bytes = text.encode('utf-8')
+        text_bytes = text.encode("utf-8")
         last_byte_end = 0
 
         for link_facet in link_facets:
-            byte_start = link_facet['byte_start']
-            byte_end = link_facet['byte_end']
-            uri = link_facet['uri']
+            byte_start = link_facet["byte_start"]
+            byte_end = link_facet["byte_end"]
+            uri = link_facet["uri"]
 
             # Add text before the link
             if byte_start > last_byte_end:
-                before_text = text_bytes[last_byte_end:byte_start].decode('utf-8')
+                before_text = text_bytes[last_byte_end:byte_start].decode("utf-8")
                 rich_text.append(before_text)
 
             # Add the link
-            link_text = text_bytes[byte_start:byte_end].decode('utf-8')
+            link_text = text_bytes[byte_start:byte_end].decode("utf-8")
             rich_text.append(link_text, style=f"link {uri}")
             last_byte_end = byte_end
 
         # Add any remaining text
         if last_byte_end < len(text_bytes):
-            remaining_text = text_bytes[last_byte_end:].decode('utf-8')
+            remaining_text = text_bytes[last_byte_end:].decode("utf-8")
             rich_text.append(remaining_text)
 
         return rich_text

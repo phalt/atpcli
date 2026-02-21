@@ -37,6 +37,7 @@ nav:
     - Login: usage-login.md
     - Timeline: usage-timeline.md
     - Post: usage-post.md
+    - Spice: usage-spice.md
 
 markdown_extensions:
   - pymdownx.inlinehilite

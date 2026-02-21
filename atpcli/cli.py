@@ -8,6 +8,7 @@ from rich.console import Console
 
 from atpcli.config import Config
 from atpcli.display import display_post
+from atpcli.spice import spice
 
 console = Console()
 
@@ -45,6 +46,7 @@ def bsky():
 
 
 cli.add_command(bsky)
+cli.add_command(spice)
 
 
 @bsky.command()
