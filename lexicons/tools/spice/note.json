@@ -1,0 +1,32 @@
+{
+  "lexicon": 1,
+  "id": "tools.spice.note",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "A short public annotation attached to a URL.",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["url", "text", "createdAt"],
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "The fully-qualified URL being annotated. Must include scheme and host. No normalisation is applied — consumers should normalise before indexing."
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 256,
+            "description": "The annotation text. Plain text only. No markdown, no formatting. Links may appear inline as raw URLs within the text."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "ISO 8601 / RFC 3339 datetime of record creation."
+          }
+        }
+      }
+    }
+  }
+}
