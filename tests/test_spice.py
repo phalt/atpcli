@@ -219,6 +219,7 @@ def test_list_success(mock_config_class, mock_client_class, runner):
 
     mock_response = MagicMock()
     mock_response.records = [mock_record1, mock_record2, mock_record3]
+    mock_response.cursor = None
     mock_client.com.atproto.repo.list_records.return_value = mock_response
 
     # Mock config
@@ -238,6 +239,62 @@ def test_list_success(mock_config_class, mock_client_class, runner):
     assert "at://did:plc:test123/tools.spice.note/abc123" in result.output
     assert "at://did:plc:test123/tools.spice.note/def456" in result.output
     mock_client.login.assert_called_once_with(session_string="test_session")
+
+
+@patch("atpcli.spice.Client")
+@patch("atpcli.spice.Config")
+def test_list_with_pagination(mock_config_class, mock_client_class, runner):
+    """Test list with pagination."""
+    # Setup mocks
+    mock_client = MagicMock()
+    mock_client_class.return_value = mock_client
+    mock_client.me.did = "did:plc:test123"
+
+    # Mock first page
+    mock_record1 = MagicMock()
+    mock_record1.uri = "at://did:plc:test123/tools.spice.note/abc123"
+    mock_record1.value = {
+        "url": "https://example.com",
+        "text": "First note",
+        "createdAt": "2026-02-21T10:00:00Z",
+    }
+
+    mock_response1 = MagicMock()
+    mock_response1.records = [mock_record1]
+    mock_response1.cursor = "cursor_page_2"
+
+    # Mock second page
+    mock_record2 = MagicMock()
+    mock_record2.uri = "at://did:plc:test123/tools.spice.note/def456"
+    mock_record2.value = {
+        "url": "https://example.com",
+        "text": "Second note",
+        "createdAt": "2026-02-21T12:00:00Z",
+    }
+
+    mock_response2 = MagicMock()
+    mock_response2.records = [mock_record2]
+    mock_response2.cursor = None
+
+    # Mock get_timeline to return different responses
+    mock_client.com.atproto.repo.list_records.side_effect = [mock_response1, mock_response2]
+
+    # Mock config
+    mock_config = MagicMock()
+    mock_config.load_session.return_value = ("test.bsky.social", "test_session")
+    mock_config_class.return_value = mock_config
+
+    # Run list with --all flag
+    result = runner.invoke(cli, ["spice", "list", "https://example.com", "--all"])
+
+    # Verify
+    assert result.exit_code == 0
+    assert "Found 2 note(s)" in result.output
+    assert "First note" in result.output
+    assert "Second note" in result.output
+    mock_client.login.assert_called_once_with(session_string="test_session")
+    # Should be called twice for pagination
+    assert mock_client.com.atproto.repo.list_records.call_count == 2
 
 
 @patch("atpcli.spice.Client")

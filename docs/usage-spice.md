@@ -86,11 +86,27 @@ at://did:plc:abc123/tools.spice.note/3kt9abc  2026-02-21T12:30:00Z
 Updated with even more examples now!
 ```
 
+**Options:**
+
+- `--limit INTEGER`: Number of records to fetch per page (default: 50)
+- `--all`: Fetch all records across all pages (by default, only fetches the first page)
+
+**Pagination Examples:**
+
+```bash
+# Fetch all notes (across all pages)
+atpcli spice list https://example.com --all
+
+# Fetch with custom page size
+atpcli spice list https://example.com --limit 100
+```
+
 **Notes:**
 
 - Only shows **your own notes** (notes created by your logged-in account)
 - URL must match exactly (no normalization is applied)
 - If no notes are found, you'll see: "No notes found for \<url\>"
+- By default, fetches up to 50 records from the first page. Use `--all` to fetch all pages.
 
 ### Delete a Note
 

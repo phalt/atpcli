@@ -1,19 +1,18 @@
 """Spice commands for atpcli."""
 
 from datetime import datetime, timezone
-from urllib.parse import urlparse
 
 import click
 from atproto import Client
 from atproto.exceptions import AtProtocolError
+from pydantic import ValidationError
 from rich.console import Console
 
 from atpcli.config import Config
+from atpcli.constants import SPICE_COLLECTION_NAME, SPICE_MAX_TEXT_LENGTH
+from atpcli.models import SpiceNote
 
 console = Console()
-
-COLLECTION_NAME = "tools.spice.note"
-MAX_TEXT_LENGTH = 256
 
 
 @click.group()
@@ -41,24 +40,26 @@ def add(url: str, text: str):
         console.print("[red]✗ Not logged in. Please run 'atpcli bsky login' first.[/red]")
         raise SystemExit(1)
 
-    # Validate URL
+    # Set createdAt to current UTC time in RFC 3339 format
+    created_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+
+    # Validate and create the note model
     try:
-        parsed = urlparse(url)
-        if not parsed.scheme or not parsed.netloc:
-            console.print(f"[red]✗ Invalid URL: {url}[/red]")
-            console.print("[yellow]URL must include scheme and host (e.g., https://example.com)[/yellow]")
-            raise SystemExit(1)
-    except Exception as e:
-        console.print(f"[red]✗ Invalid URL: {e}[/red]")
-        raise SystemExit(1)
-
-    # Validate text length
-    if not text or not text.strip():
-        console.print("[red]✗ Text cannot be empty.[/red]")
-        raise SystemExit(1)
-
-    if len(text) > MAX_TEXT_LENGTH:
-        console.print(f"[red]✗ Text is too long: {len(text)} characters (max {MAX_TEXT_LENGTH})[/red]")
+        note = SpiceNote(url=url, text=text, createdAt=created_at)
+    except ValidationError as e:
+        for error in e.errors():
+            field = error["loc"][0]
+            msg = error["msg"]
+            if field == "url":
+                console.print(f"[red]✗ Invalid URL: {url}[/red]")
+                console.print(f"[yellow]{msg}[/yellow]")
+            elif field == "text":
+                if "String should have at most" in msg:
+                    console.print(
+                        f"[red]✗ Text is too long: {len(text)} characters (max {SPICE_MAX_TEXT_LENGTH})[/red]"
+                    )
+                else:
+                    console.print(f"[red]✗ {msg}[/red]")
         raise SystemExit(1)
 
     # Create the record
@@ -69,21 +70,13 @@ def add(url: str, text: str):
         # Restore session
         client.login(session_string=session_string)
 
-        # Set createdAt to current UTC time in RFC 3339 format
-        created_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
-
-        # Create the record
-        record = {
-            "url": url,
-            "text": text,
-            "createdAt": created_at,
-            "$type": COLLECTION_NAME,
-        }
+        # Create the record using pydantic model
+        record = note.to_record()
 
         response = client.com.atproto.repo.create_record(
             {
                 "repo": client.me.did,
-                "collection": COLLECTION_NAME,
+                "collection": SPICE_COLLECTION_NAME,
                 "record": record,
             }
         )
@@ -104,7 +97,9 @@ def add(url: str, text: str):
 
 @spice.command()
 @click.argument("url")
-def list(url: str):
+@click.option("--limit", default=50, help="Number of records to fetch per page")
+@click.option("--all", "fetch_all", is_flag=True, help="Fetch all records across all pages")
+def list(url: str, limit: int, fetch_all: bool):
     """List all your notes for a URL.
 
     Shows all tools.spice.note records you have created for the given URL.
@@ -126,24 +121,38 @@ def list(url: str):
         # Restore session
         client.login(session_string=session_string)
 
-        # List all records in the collection
-        response = client.com.atproto.repo.list_records(
-            {
+        # Collect all matching records
+        all_matching_records = []
+        cursor = None
+
+        while True:
+            # List records in the collection with pagination
+            params = {
                 "repo": client.me.did,
-                "collection": COLLECTION_NAME,
+                "collection": SPICE_COLLECTION_NAME,
+                "limit": limit,
             }
-        )
+            if cursor:
+                params["cursor"] = cursor
 
-        # Filter for matching URL
-        matching_records = [r for r in response.records if r.value.get("url") == url]
+            response = client.com.atproto.repo.list_records(params)
 
-        if not matching_records:
+            # Filter for matching URL
+            matching_records = [r for r in response.records if r.value.get("url") == url]
+            all_matching_records.extend(matching_records)
+
+            # Check if we should continue pagination
+            cursor = getattr(response, "cursor", None)
+            if not cursor or not fetch_all:
+                break
+
+        if not all_matching_records:
             console.print(f"[yellow]No notes found for {url}[/yellow]")
             return
 
         # Display each matching record
-        console.print(f"\n[green]Found {len(matching_records)} note(s):[/green]\n")
-        for record in matching_records:
+        console.print(f"\n[green]Found {len(all_matching_records)} note(s):[/green]\n")
+        for record in all_matching_records:
             # Use the AT URI from the record
             at_uri = record.uri
             created_at = record.value.get("createdAt", "")
@@ -195,9 +204,9 @@ def delete(at_uri: str):
         repo_did, collection, rkey = parts
 
         # Validate collection
-        if collection != COLLECTION_NAME:
+        if collection != SPICE_COLLECTION_NAME:
             console.print(f"[red]✗ Invalid collection: {collection}[/red]")
-            console.print(f"[yellow]This command only deletes {COLLECTION_NAME} records[/yellow]")
+            console.print(f"[yellow]This command only deletes {SPICE_COLLECTION_NAME} records[/yellow]")
             raise SystemExit(1)
 
     except ValueError as e:
