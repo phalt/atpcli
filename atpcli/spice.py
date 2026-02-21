@@ -88,8 +88,8 @@ def add(url: str, text: str):
             }
         )
 
-        # Build the AT URI
-        at_uri = f"at://{client.me.did}/{COLLECTION_NAME}/{response.uri.split('/')[-1]}"
+        # Use the AT URI returned by the server
+        at_uri = response.uri
 
         console.print(f"[green]✓ Created: {at_uri}[/green]")
 
@@ -144,8 +144,8 @@ def list(url: str):
         # Display each matching record
         console.print(f"\n[green]Found {len(matching_records)} note(s):[/green]\n")
         for record in matching_records:
-            # Build the AT URI
-            at_uri = f"at://{client.me.did}/{COLLECTION_NAME}/{record.uri.split('/')[-1]}"
+            # Use the AT URI from the record
+            at_uri = record.uri
             created_at = record.value.get("createdAt", "")
             text = record.value.get("text", "")
 
