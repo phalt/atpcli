@@ -432,6 +432,7 @@ def test_is_reply():
 def test_is_repost_or_quote():
     """Test _is_repost_or_quote function."""
     from atproto_client.models.app.bsky.embed.record import View as RecordView
+
     from atpcli.display import _is_repost_or_quote
 
     # Test with record embed

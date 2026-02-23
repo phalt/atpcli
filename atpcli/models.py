@@ -38,15 +38,31 @@ class SpiceNote(BaseModel):
         """Validate that createdAt is a valid UTC timestamp in RFC 3339 format."""
         try:
             # Parse the datetime to ensure it's valid
-            dt = datetime.fromisoformat(v.replace("Z", "+00:00"))
+            datetime.fromisoformat(v.replace("Z", "+00:00"))
             # Ensure it's in UTC by checking if it ends with Z or has +00:00 offset
             if not (v.endswith("Z") or v.endswith("+00:00")):
                 raise ValueError("Timestamp must be in UTC (should end with 'Z' or '+00:00')")
             return v
         except (ValueError, AttributeError):
             raise ValueError(
-                "Invalid datetime format. Expected ISO 8601 / RFC 3339 format with UTC timezone (e.g., 2024-01-01T00:00:00Z)"
+                "Invalid datetime format. Expected ISO 8601 / RFC 3339 format with UTC (e.g., 2024-01-01T00:00:00Z)"
             )
+
+    @classmethod
+    def from_record(cls, record) -> "SpiceNote":
+        """Create a SpiceNote from an atproto record response.
+
+        Args:
+            record: Record object from atproto API response with .uri and .value attributes
+
+        Returns:
+            SpiceNote instance
+        """
+        return cls(
+            url=record.value["url"],
+            text=record.value["text"],
+            createdAt=record.value["createdAt"],
+        )
 
     def to_record(self) -> dict:
         """Convert to atproto record format."""

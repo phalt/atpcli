@@ -3,13 +3,13 @@
 from datetime import datetime, timezone
 
 import click
-from atproto import Client
 from atproto.exceptions import AtProtocolError
 from pydantic import ValidationError
 from rich.console import Console
 
 from atpcli.config import Config
 from atpcli.constants import SPICE_COLLECTION_NAME, SPICE_MAX_TEXT_LENGTH
+from atpcli.display import display_spice_note
 from atpcli.models import SpiceNote
 from atpcli.session import create_client_with_session_refresh
 
@@ -18,30 +18,30 @@ console = Console()
 
 def parse_at_uri(at_uri: str) -> tuple[str, str, str]:
     """Parse an AT URI into its components.
-    
+
     Args:
         at_uri: The AT URI to parse (e.g., at://did:plc:xxx/collection/rkey)
-        
+
     Returns:
         Tuple of (repo_did, collection, rkey)
-        
+
     Raises:
         ValueError: If the URI format is invalid
     """
     if not at_uri.startswith("at://"):
         raise ValueError(f"AT URI must start with 'at://': {at_uri}")
-    
+
     parts = at_uri.replace("at://", "").split("/")
     if len(parts) != 3:
         raise ValueError(f"Invalid AT URI format (expected at://did/collection/rkey): {at_uri}")
-    
+
     return parts[0], parts[1], parts[2]
 
 
 @click.group()
 def spice():
     """Commands for Spice - web annotations on AT Protocol.
-    
+
     Sprinkle some spice across the web: https://spice.tools
     """
     pass
@@ -120,15 +120,16 @@ def add(url: str, text: str):
 
 
 @spice.command()
-@click.argument("url")
+@click.argument("url", required=False)
 @click.option("--limit", default=None, type=int, help="Maximum number of matching notes to display")
 @click.option("--all", "fetch_all", is_flag=True, help="Fetch all records across all pages")
 def list(url: str, limit: int, fetch_all: bool):
-    """List all your notes for a URL.
+    """List your notes, optionally filtered by URL.
 
-    Shows all tools.spice.note records you have created for the given URL.
+    Shows all tools.spice.note records you have created. If URL is provided,
+    only notes for that URL are shown.
 
-    URL: The URL to query for notes
+    URL: Optional URL to filter notes (if omitted, shows all notes)
     """
     # Load session
     config = Config()
@@ -139,7 +140,10 @@ def list(url: str, limit: int, fetch_all: bool):
         raise SystemExit(1)
 
     try:
-        console.print(f"[blue]Loading notes for {url}...[/blue]")
+        if url:
+            console.print(f"[blue]Loading notes for {url}...[/blue]")
+        else:
+            console.print("[blue]Loading all notes...[/blue]")
 
         # Create client with automatic session refresh
         client = create_client_with_session_refresh(config, handle, session_string)
@@ -161,8 +165,13 @@ def list(url: str, limit: int, fetch_all: bool):
 
             response = client.com.atproto.repo.list_records(params)
 
-            # Filter for matching URL
-            matching_records = [r for r in response.records if r.value.get("url") == url]
+            # Filter for matching URL (if provided) and convert to SpiceNote models
+            if url:
+                matching_records = [
+                    (r.uri, SpiceNote.from_record(r)) for r in response["records"] if r.value["url"] == url
+                ]
+            else:
+                matching_records = [(r.uri, SpiceNote.from_record(r)) for r in response["records"]]
             all_matching_records.extend(matching_records)
 
             # Check if we've reached the limit
@@ -176,7 +185,10 @@ def list(url: str, limit: int, fetch_all: bool):
                 break
 
         if not all_matching_records:
-            console.print(f"[yellow]No notes found for {url}[/yellow]")
+            if url:
+                console.print(f"[yellow]No notes found for {url}[/yellow]")
+            else:
+                console.print("[yellow]No notes found[/yellow]")
             return
 
         # Reverse the order to show latest at the bottom
@@ -184,14 +196,13 @@ def list(url: str, limit: int, fetch_all: bool):
 
         # Display each matching record
         console.print(f"\n[green]Found {len(all_matching_records)} note(s):[/green]\n")
-        for record in all_matching_records:
-            # Use the AT URI from the record
-            at_uri = record.uri
-            created_at = record.value.get("createdAt", "")
-            text = record.value.get("text", "")
 
-            console.print(f"[cyan]{at_uri}[/cyan]  [dim]{created_at}[/dim]")
-            console.print(f"{text}\n")
+        # Cache profiles to avoid redundant API calls
+        profile_cache = {}
+
+        for at_uri, note in all_matching_records:
+            table = display_spice_note(note, at_uri, client, profile_cache)
+            console.print(table)
 
     except AtProtocolError as e:
         console.print(f"[red]✗ Failed to list notes: {e}[/red]")
