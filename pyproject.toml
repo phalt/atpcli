@@ -1,6 +1,6 @@
 [project]
 name = "atpcli"
-version = "0.3.0"
+version = "0.4.0"
 description = "A Python CLI wrapper around the atproto package"
 authors = [{ name = "Paul Hallett", email = "paulandrewhallett@gmail.com" }]
 license = { text = "MIT" }
