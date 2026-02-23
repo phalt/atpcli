@@ -88,17 +88,20 @@ Updated with even more examples now!
 
 **Options:**
 
-- `--limit INTEGER`: Number of records to fetch per page (default: 50)
-- `--all`: Fetch all records across all pages (by default, only fetches the first page)
+- `--limit INTEGER`: Maximum number of matching notes to display (optional)
+- `--all`: Fetch all records across all pages (by default, only fetches until limit is reached or first page is exhausted)
 
 **Pagination Examples:**
 
 ```bash
-# Fetch all notes (across all pages)
+# Fetch all notes for a URL (across all pages)
 atpcli spice list https://example.com --all
 
-# Fetch with custom page size
-atpcli spice list https://example.com --limit 100
+# Limit to first 10 matching notes
+atpcli spice list https://example.com --limit 10
+
+# Combine options: fetch all pages but limit to 50 matching notes
+atpcli spice list https://example.com --all --limit 50
 ```
 
 **Notes:**
@@ -106,7 +109,8 @@ atpcli spice list https://example.com --limit 100
 - Only shows **your own notes** (notes created by your logged-in account)
 - URL must match exactly (no normalization is applied)
 - If no notes are found, you'll see: "No notes found for \<url\>"
-- By default, fetches up to 50 records from the first page. Use `--all` to fetch all pages.
+- Notes are displayed in reverse chronological order (oldest first, newest last) for better readability when scrolling
+- The `--limit` option limits the number of **matching notes** displayed, not the number of API calls
 
 ### Delete a Note
 

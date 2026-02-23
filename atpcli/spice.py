@@ -15,9 +15,34 @@ from atpcli.models import SpiceNote
 console = Console()
 
 
+def parse_at_uri(at_uri: str) -> tuple[str, str, str]:
+    """Parse an AT URI into its components.
+    
+    Args:
+        at_uri: The AT URI to parse (e.g., at://did:plc:xxx/collection/rkey)
+        
+    Returns:
+        Tuple of (repo_did, collection, rkey)
+        
+    Raises:
+        ValueError: If the URI format is invalid
+    """
+    if not at_uri.startswith("at://"):
+        raise ValueError(f"AT URI must start with 'at://': {at_uri}")
+    
+    parts = at_uri.replace("at://", "").split("/")
+    if len(parts) != 3:
+        raise ValueError(f"Invalid AT URI format (expected at://did/collection/rkey): {at_uri}")
+    
+    return parts[0], parts[1], parts[2]
+
+
 @click.group()
 def spice():
-    """Commands for Spice - web annotations on AT Protocol."""
+    """Commands for Spice - web annotations on AT Protocol.
+    
+    Sprinkle some spice across the web: https://spice.tools
+    """
     pass
 
 
@@ -97,7 +122,7 @@ def add(url: str, text: str):
 
 @spice.command()
 @click.argument("url")
-@click.option("--limit", default=50, help="Number of records to fetch per page")
+@click.option("--limit", default=None, type=int, help="Maximum number of matching notes to display")
 @click.option("--all", "fetch_all", is_flag=True, help="Fetch all records across all pages")
 def list(url: str, limit: int, fetch_all: bool):
     """List all your notes for a URL.
@@ -124,13 +149,14 @@ def list(url: str, limit: int, fetch_all: bool):
         # Collect all matching records
         all_matching_records = []
         cursor = None
+        api_page_size = 100  # Use larger page size for API calls to reduce requests
 
         while True:
             # List records in the collection with pagination
             params = {
                 "repo": client.me.did,
                 "collection": SPICE_COLLECTION_NAME,
-                "limit": limit,
+                "limit": api_page_size,
             }
             if cursor:
                 params["cursor"] = cursor
@@ -141,6 +167,11 @@ def list(url: str, limit: int, fetch_all: bool):
             matching_records = [r for r in response.records if r.value.get("url") == url]
             all_matching_records.extend(matching_records)
 
+            # Check if we've reached the limit
+            if limit is not None and len(all_matching_records) >= limit:
+                all_matching_records = all_matching_records[:limit]
+                break
+
             # Check if we should continue pagination
             cursor = getattr(response, "cursor", None)
             if not cursor or not fetch_all:
@@ -149,6 +180,9 @@ def list(url: str, limit: int, fetch_all: bool):
         if not all_matching_records:
             console.print(f"[yellow]No notes found for {url}[/yellow]")
             return
+
+        # Reverse the order to show latest at the bottom
+        all_matching_records.reverse()
 
         # Display each matching record
         console.print(f"\n[green]Found {len(all_matching_records)} note(s):[/green]\n")
@@ -188,29 +222,17 @@ def delete(at_uri: str):
         raise SystemExit(1)
 
     # Parse and validate AT URI
-    if not at_uri.startswith("at://"):
-        console.print(f"[red]✗ Invalid AT URI: {at_uri}[/red]")
-        console.print("[yellow]AT URI must start with 'at://'[/yellow]")
+    try:
+        repo_did, collection, rkey = parse_at_uri(at_uri)
+    except ValueError as e:
+        console.print(f"[red]✗ {e}[/red]")
+        console.print("[yellow]Expected format: at://did:plc:xxx/collection/rkey[/yellow]")
         raise SystemExit(1)
 
-    try:
-        # Parse AT URI: at://did/collection/rkey
-        parts = at_uri.replace("at://", "").split("/")
-        if len(parts) != 3:
-            console.print(f"[red]✗ Invalid AT URI format: {at_uri}[/red]")
-            console.print("[yellow]Expected format: at://did:plc:xxx/collection/rkey[/yellow]")
-            raise SystemExit(1)
-
-        repo_did, collection, rkey = parts
-
-        # Validate collection
-        if collection != SPICE_COLLECTION_NAME:
-            console.print(f"[red]✗ Invalid collection: {collection}[/red]")
-            console.print(f"[yellow]This command only deletes {SPICE_COLLECTION_NAME} records[/yellow]")
-            raise SystemExit(1)
-
-    except ValueError as e:
-        console.print(f"[red]✗ Failed to parse AT URI: {e}[/red]")
+    # Validate collection
+    if collection != SPICE_COLLECTION_NAME:
+        console.print(f"[red]✗ Invalid collection: {collection}[/red]")
+        console.print(f"[yellow]This command only deletes {SPICE_COLLECTION_NAME} records[/yellow]")
         raise SystemExit(1)
 
     # Delete the record

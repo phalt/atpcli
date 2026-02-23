@@ -6,12 +6,33 @@ import pytest
 from click.testing import CliRunner
 
 from atpcli.cli import cli
+from atpcli.spice import parse_at_uri
 
 
 @pytest.fixture
 def runner():
     """Create a CLI runner."""
     return CliRunner()
+
+
+def test_parse_at_uri_valid():
+    """Test parsing valid AT URI."""
+    repo_did, collection, rkey = parse_at_uri("at://did:plc:test123/tools.spice.note/abc123")
+    assert repo_did == "did:plc:test123"
+    assert collection == "tools.spice.note"
+    assert rkey == "abc123"
+
+
+def test_parse_at_uri_invalid_no_scheme():
+    """Test parsing AT URI without scheme."""
+    with pytest.raises(ValueError, match="AT URI must start with 'at://'"):
+        parse_at_uri("did:plc:test123/tools.spice.note/abc123")
+
+
+def test_parse_at_uri_invalid_format():
+    """Test parsing AT URI with invalid format."""
+    with pytest.raises(ValueError, match="Invalid AT URI format"):
+        parse_at_uri("at://invalid")
 
 
 def test_spice_group(runner):
@@ -231,6 +252,7 @@ def test_list_success(mock_config_class, mock_client_class, runner):
     result = runner.invoke(cli, ["spice", "list", "https://example.com"])
 
     # Verify - should only show records for https://example.com
+    # Records should be in reverse order so latest appears at bottom
     assert result.exit_code == 0
     assert "Found 2 note(s)" in result.output
     assert "First note" in result.output
@@ -238,6 +260,11 @@ def test_list_success(mock_config_class, mock_client_class, runner):
     assert "Different URL" not in result.output
     assert "at://did:plc:test123/tools.spice.note/abc123" in result.output
     assert "at://did:plc:test123/tools.spice.note/def456" in result.output
+    # Verify the order - Second note (newer) appears before First note (older)
+    # After reverse, newest is first so latest appears at bottom when scrolling
+    first_note_pos = result.output.index("First note")
+    second_note_pos = result.output.index("Second note")
+    assert second_note_pos < first_note_pos  # Second (newer) appears before First (older)
     mock_client.login.assert_called_once_with(session_string="test_session")
 
 
@@ -322,7 +349,7 @@ def test_delete_invalid_uri_no_scheme(mock_config_class, mock_client_class, runn
     result = runner.invoke(cli, ["spice", "delete", "did:plc:test123/tools.spice.note/abc123"])
 
     assert result.exit_code == 1
-    assert "Invalid AT URI" in result.output
+    assert "AT URI must start with 'at://'" in result.output
 
 
 @patch("atpcli.spice.Client")
