@@ -252,7 +252,7 @@ def test_list_success(mock_config_class, mock_client_class, runner):
     result = runner.invoke(cli, ["spice", "list", "https://example.com"])
 
     # Verify - should only show records for https://example.com
-    # Records should be in reverse order so latest appears at bottom
+    # After reverse, oldest appears first so latest appears at bottom when scrolling
     assert result.exit_code == 0
     assert "Found 2 note(s)" in result.output
     assert "First note" in result.output
@@ -261,7 +261,7 @@ def test_list_success(mock_config_class, mock_client_class, runner):
     assert "at://did:plc:test123/tools.spice.note/abc123" in result.output
     assert "at://did:plc:test123/tools.spice.note/def456" in result.output
     # Verify the order - Second note (newer) appears before First note (older)
-    # After reverse, newest is first so latest appears at bottom when scrolling
+    # After reverse, oldest is first so latest appears at bottom when scrolling
     first_note_pos = result.output.index("First note")
     second_note_pos = result.output.index("Second note")
     assert second_note_pos < first_note_pos  # Second (newer) appears before First (older)

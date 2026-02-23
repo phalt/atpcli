@@ -43,8 +43,10 @@ class SpiceNote(BaseModel):
             if not (v.endswith("Z") or v.endswith("+00:00")):
                 raise ValueError("Timestamp must be in UTC (should end with 'Z' or '+00:00')")
             return v
-        except (ValueError, AttributeError) as e:
-            raise ValueError(f"Invalid ISO 8601 / RFC 3339 datetime format: {e}")
+        except (ValueError, AttributeError):
+            raise ValueError(
+                "Invalid datetime format. Expected ISO 8601 / RFC 3339 format with UTC timezone (e.g., 2024-01-01T00:00:00Z)"
+            )
 
     def to_record(self) -> dict:
         """Convert to atproto record format."""
