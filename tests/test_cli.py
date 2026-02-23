@@ -78,9 +78,9 @@ def test_login_success(mock_config_class, mock_client_class, runner, temp_config
     mock_config.save_session.assert_called_once_with("test.bsky.social", "test_session")
 
 
-@patch("atpcli.cli.Client")
+@patch("atpcli.cli.create_client_with_session_refresh")
 @patch("atpcli.cli.Config")
-def test_timeline_not_logged_in(mock_config_class, mock_client_class, runner):
+def test_timeline_not_logged_in(mock_config_class, mock_create_client, runner):
     """Test timeline when not logged in."""
     mock_config = MagicMock()
     mock_config.load_session.return_value = (None, None)
@@ -92,13 +92,13 @@ def test_timeline_not_logged_in(mock_config_class, mock_client_class, runner):
     assert "Not logged in" in result.output
 
 
-@patch("atpcli.cli.Client")
+@patch("atpcli.cli.create_client_with_session_refresh")
 @patch("atpcli.cli.Config")
-def test_timeline_success(mock_config_class, mock_client_class, runner):
+def test_timeline_success(mock_config_class, mock_create_client, runner):
     """Test successful timeline fetch."""
     # Setup mocks
     mock_client = MagicMock()
-    mock_client_class.return_value = mock_client
+    mock_create_client.return_value = mock_client
 
     # Mock timeline response
     mock_post = MagicMock()
@@ -130,17 +130,17 @@ def test_timeline_success(mock_config_class, mock_client_class, runner):
     assert "Test Author" in result.output
     assert "Test post" in result.output
     assert "Showing 1 posts" in result.output
-    mock_client.login.assert_called_once_with(session_string="test_session")
+    mock_create_client.assert_called_once_with(mock_config, "test.bsky.social", "test_session")
     mock_client.get_timeline.assert_called_once_with(limit=10, cursor=None)
 
 
-@patch("atpcli.cli.Client")
+@patch("atpcli.cli.create_client_with_session_refresh")
 @patch("atpcli.cli.Config")
-def test_timeline_with_pagination(mock_config_class, mock_client_class, runner):
+def test_timeline_with_pagination(mock_config_class, mock_create_client, runner):
     """Test timeline with pagination."""
     # Setup mocks
     mock_client = MagicMock()
-    mock_client_class.return_value = mock_client
+    mock_create_client.return_value = mock_client
 
     # Mock timeline response for page 1
     mock_timeline_page1 = MagicMock()
@@ -179,7 +179,7 @@ def test_timeline_with_pagination(mock_config_class, mock_client_class, runner):
     assert "Test post on page 2" in result.output
     assert "page 2" in result.output
     assert "--p 3" in result.output  # Should show next page hint
-    mock_client.login.assert_called_once_with(session_string="test_session")
+    mock_create_client.assert_called_once_with(mock_config, "test.bsky.social", "test_session")
     # Should be called twice: once to skip page 1, once to get page 2
     assert mock_client.get_timeline.call_count == 2
 
@@ -191,9 +191,9 @@ def test_post_command_help(runner):
     assert "Post a message to Bluesky" in result.output
 
 
-@patch("atpcli.cli.Client")
+@patch("atpcli.cli.create_client_with_session_refresh")
 @patch("atpcli.cli.Config")
-def test_post_not_logged_in(mock_config_class, mock_client_class, runner):
+def test_post_not_logged_in(mock_config_class, mock_create_client, runner):
     """Test post when not logged in."""
     mock_config = MagicMock()
     mock_config.load_session.return_value = (None, None)
@@ -205,13 +205,13 @@ def test_post_not_logged_in(mock_config_class, mock_client_class, runner):
     assert "Not logged in" in result.output
 
 
-@patch("atpcli.cli.Client")
+@patch("atpcli.cli.create_client_with_session_refresh")
 @patch("atpcli.cli.Config")
-def test_post_success(mock_config_class, mock_client_class, runner):
+def test_post_success(mock_config_class, mock_create_client, runner):
     """Test successful post."""
     # Setup mocks
     mock_client = MagicMock()
-    mock_client_class.return_value = mock_client
+    mock_create_client.return_value = mock_client
 
     # Mock post response
     mock_response = MagicMock()
@@ -230,17 +230,17 @@ def test_post_success(mock_config_class, mock_client_class, runner):
     assert result.exit_code == 0
     assert "Post created successfully" in result.output
     assert "https://bsky.app/profile/test.bsky.social/post/abc123xyz" in result.output
-    mock_client.login.assert_called_once_with(session_string="test_session")
+    mock_create_client.assert_called_once_with(mock_config, "test.bsky.social", "test_session")
     mock_client.send_post.assert_called_once_with(text="Hello Bluesky!")
 
 
-@patch("atpcli.cli.Client")
+@patch("atpcli.cli.create_client_with_session_refresh")
 @patch("atpcli.cli.Config")
-def test_post_with_short_option(mock_config_class, mock_client_class, runner):
+def test_post_with_short_option(mock_config_class, mock_create_client, runner):
     """Test post with -m short option."""
     # Setup mocks
     mock_client = MagicMock()
-    mock_client_class.return_value = mock_client
+    mock_create_client.return_value = mock_client
 
     # Mock post response
     mock_response = MagicMock()
@@ -261,13 +261,13 @@ def test_post_with_short_option(mock_config_class, mock_client_class, runner):
     mock_client.send_post.assert_called_once_with(text="Quick post!")
 
 
-@patch("atpcli.cli.Client")
+@patch("atpcli.cli.create_client_with_session_refresh")
 @patch("atpcli.cli.Config")
-def test_post_failure(mock_config_class, mock_client_class, runner):
+def test_post_failure(mock_config_class, mock_create_client, runner):
     """Test post failure."""
     # Setup mocks
     mock_client = MagicMock()
-    mock_client_class.return_value = mock_client
+    mock_create_client.return_value = mock_client
     mock_client.send_post.side_effect = Exception("Network error")
 
     # Mock config

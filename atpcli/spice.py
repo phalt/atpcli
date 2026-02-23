@@ -3,7 +3,7 @@
 from datetime import datetime, timezone
 
 import click
-from atproto import Client, SessionEvent
+from atproto import Client
 from atproto.exceptions import AtProtocolError
 from pydantic import ValidationError
 from rich.console import Console
@@ -11,36 +11,9 @@ from rich.console import Console
 from atpcli.config import Config
 from atpcli.constants import SPICE_COLLECTION_NAME, SPICE_MAX_TEXT_LENGTH
 from atpcli.models import SpiceNote
+from atpcli.session import create_client_with_session_refresh
 
 console = Console()
-
-
-def create_client_with_session_refresh(config: Config, handle: str, session_string: str) -> Client:
-    """Create a client with automatic session refresh.
-    
-    Args:
-        config: Config instance for saving refreshed session
-        handle: User handle
-        session_string: Current session string
-        
-    Returns:
-        Configured Client instance
-    """
-    client = Client()
-    
-    # Register callback to save refreshed sessions
-    def on_session_change(event: SessionEvent, session) -> None:
-        if event in (SessionEvent.CREATE, SessionEvent.REFRESH):
-            # Save the refreshed session
-            new_session_string = client.export_session_string()
-            config.save_session(handle, new_session_string)
-    
-    client.on_session_change(on_session_change)
-    
-    # Restore session from saved string
-    client.login(session_string=session_string)
-    
-    return client
 
 
 def parse_at_uri(at_uri: str) -> tuple[str, str, str]:
