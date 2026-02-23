@@ -117,8 +117,10 @@ def test_display_post():
     mock_post.author.display_name = "Test User"
     mock_post.author.handle = "test.bsky.social"
     mock_post.record.text = "This is a test post with https://example.com"
+    mock_post.record.reply = None
     mock_post.like_count = 10
     mock_post.uri = "at://did:plc:test123/app.bsky.feed.post/abc123"
+    mock_post.embed = None
 
     table = display_post(mock_post)
 
@@ -138,8 +140,10 @@ def test_display_post_renders_content_links():
     mock_post.author.display_name = "Test User"
     mock_post.author.handle = "test.bsky.social"
     mock_post.record.text = "Check out https://example.com"
+    mock_post.record.reply = None
     mock_post.like_count = 5
     mock_post.uri = "at://did:plc:test123/app.bsky.feed.post/abc123"
+    mock_post.embed = None
 
     table = display_post(mock_post)
 
@@ -192,6 +196,7 @@ def test_display_post_with_image():
     mock_post.author.display_name = "Test User"
     mock_post.author.handle = "test.bsky.social"
     mock_post.record.text = "Post with image"
+    mock_post.record.reply = None
     mock_post.like_count = 10
     mock_post.uri = "at://did:plc:test123/app.bsky.feed.post/abc123"
     mock_post.embed = ImagesView(images=[])
@@ -323,8 +328,10 @@ def test_display_post_with_facets():
     mock_post.author.handle = "test.bsky.social"
     text = "Check out https://wagtail.org/blog/the-100! for more"
     mock_post.record.text = text
+    mock_post.record.reply = None
     mock_post.like_count = 5
     mock_post.uri = "at://did:plc:test123/app.bsky.feed.post/abc123"
+    mock_post.embed = None
 
     # Create facet for the link with !
     link_start = text.index("https://wagtail.org/blog/the-100!")
@@ -345,3 +352,102 @@ def test_display_post_with_facets():
     # Verify that the rendering function was called with facets
     rendered = _render_text_with_links(text, facets=[facet])
     assert "https://wagtail.org/blog/the-100!" in str(rendered)
+
+
+def test_display_post_with_reply():
+    """Test displaying a reply post shows the reply emoji."""
+    mock_post = MagicMock()
+    mock_post.author.display_name = "Test User"
+    mock_post.author.handle = "test.bsky.social"
+    mock_post.record.text = "This is a reply"
+    # Create a mock reply object that isn't None
+    mock_post.record.reply = MagicMock()
+    mock_post.like_count = 5
+    mock_post.uri = "at://did:plc:test123/app.bsky.feed.post/abc123"
+    mock_post.embed = None
+
+    table = display_post(mock_post)
+
+    # Check that the title contains the reply emoji
+    assert "⤴️" in table.title
+    assert "Test User" in table.title
+
+
+def test_display_post_with_repost():
+    """Test displaying a repost/quote post shows the repost emoji."""
+    from atproto_client.models.app.bsky.embed.record import View as RecordView
+
+    mock_post = MagicMock()
+    mock_post.author.display_name = "Test User"
+    mock_post.author.handle = "test.bsky.social"
+    mock_post.record.text = "Quote posting this"
+    mock_post.record.reply = None
+    mock_post.like_count = 5
+    mock_post.uri = "at://did:plc:test123/app.bsky.feed.post/abc123"
+    # Use isinstance check - create a proper RecordView instance
+    mock_post.embed = MagicMock(spec=RecordView)
+
+    table = display_post(mock_post)
+
+    # Check that the title contains the repost emoji
+    assert "🔁" in table.title
+    assert "Test User" in table.title
+
+
+def test_display_post_with_record_with_media():
+    """Test displaying a quote post with media shows the repost emoji."""
+    mock_post = MagicMock()
+    mock_post.author.display_name = "Test User"
+    mock_post.author.handle = "test.bsky.social"
+    mock_post.record.text = "Quote with image"
+    mock_post.record.reply = None
+    mock_post.like_count = 5
+    mock_post.uri = "at://did:plc:test123/app.bsky.feed.post/abc123"
+    # Create a mock RecordWithMediaView with images media
+    mock_embed = MagicMock(spec=RecordWithMediaView)
+    mock_embed.media = ImagesView(images=[])
+    mock_post.embed = mock_embed
+
+    table = display_post(mock_post)
+
+    # Check that the title contains the repost emoji (priority over image)
+    assert "🔁" in table.title
+    assert "Test User" in table.title
+
+
+def test_is_reply():
+    """Test _is_reply function."""
+    from atpcli.display import _is_reply
+
+    # Test with reply
+    mock_post = MagicMock()
+    mock_post.record.reply = MagicMock()  # Non-None reply object
+    assert _is_reply(mock_post) is True
+
+    # Test without reply
+    mock_post.record.reply = None
+    assert _is_reply(mock_post) is False
+
+
+def test_is_repost_or_quote():
+    """Test _is_repost_or_quote function."""
+    from atproto_client.models.app.bsky.embed.record import View as RecordView
+    from atpcli.display import _is_repost_or_quote
+
+    # Test with record embed
+    mock_post = MagicMock()
+    mock_post.embed = MagicMock(spec=RecordView)
+    assert _is_repost_or_quote(mock_post) is True
+
+    # Test with record with media
+    mock_embed = MagicMock(spec=RecordWithMediaView)
+    mock_post.embed = mock_embed
+    assert _is_repost_or_quote(mock_post) is True
+
+    # Test with no embed
+    mock_post.embed = None
+    assert _is_repost_or_quote(mock_post) is False
+
+    # Test with images embed
+    mock_post.embed = ImagesView(images=[])
+    assert _is_repost_or_quote(mock_post) is False

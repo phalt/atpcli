@@ -236,6 +236,33 @@ def test_post_success(mock_config_class, mock_client_class, runner):
 
 @patch("atpcli.cli.Client")
 @patch("atpcli.cli.Config")
+def test_post_with_short_option(mock_config_class, mock_client_class, runner):
+    """Test post with -m short option."""
+    # Setup mocks
+    mock_client = MagicMock()
+    mock_client_class.return_value = mock_client
+
+    # Mock post response
+    mock_response = MagicMock()
+    mock_response.uri = "at://did:plc:test123/app.bsky.feed.post/abc123xyz"
+    mock_client.send_post.return_value = mock_response
+
+    # Mock config
+    mock_config = MagicMock()
+    mock_config.load_session.return_value = ("test.bsky.social", "test_session")
+    mock_config_class.return_value = mock_config
+
+    # Run post with -m short option
+    result = runner.invoke(cli, ["bsky", "post", "-m", "Quick post!"])
+
+    # Verify
+    assert result.exit_code == 0
+    assert "Post created successfully" in result.output
+    mock_client.send_post.assert_called_once_with(text="Quick post!")
+
+
+@patch("atpcli.cli.Client")
+@patch("atpcli.cli.Config")
 def test_post_failure(mock_config_class, mock_client_class, runner):
     """Test post failure."""
     # Setup mocks

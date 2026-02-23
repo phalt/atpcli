@@ -3,7 +3,7 @@
 from datetime import datetime, timezone
 
 import click
-from atproto import Client
+from atproto import Client, SessionEvent
 from atproto.exceptions import AtProtocolError
 from pydantic import ValidationError
 from rich.console import Console
@@ -13,6 +13,34 @@ from atpcli.constants import SPICE_COLLECTION_NAME, SPICE_MAX_TEXT_LENGTH
 from atpcli.models import SpiceNote
 
 console = Console()
+
+
+def create_client_with_session_refresh(config: Config, handle: str, session_string: str) -> Client:
+    """Create a client with automatic session refresh.
+    
+    Args:
+        config: Config instance for saving refreshed session
+        handle: User handle
+        session_string: Current session string
+        
+    Returns:
+        Configured Client instance
+    """
+    client = Client()
+    
+    # Register callback to save refreshed sessions
+    def on_session_change(event: SessionEvent, session) -> None:
+        if event in (SessionEvent.CREATE, SessionEvent.REFRESH):
+            # Save the refreshed session
+            new_session_string = client.export_session_string()
+            config.save_session(handle, new_session_string)
+    
+    client.on_session_change(on_session_change)
+    
+    # Restore session from saved string
+    client.login(session_string=session_string)
+    
+    return client
 
 
 def parse_at_uri(at_uri: str) -> tuple[str, str, str]:
@@ -89,11 +117,10 @@ def add(url: str, text: str):
 
     # Create the record
     try:
-        client = Client()
         console.print(f"[blue]Creating note for {url}...[/blue]")
 
-        # Restore session
-        client.login(session_string=session_string)
+        # Create client with automatic session refresh
+        client = create_client_with_session_refresh(config, handle, session_string)
 
         # Create the record using pydantic model
         record = note.to_record()
@@ -113,7 +140,6 @@ def add(url: str, text: str):
 
     except AtProtocolError as e:
         console.print(f"[red]✗ Failed to create note: {e}[/red]")
-        console.print("[yellow]Your session may have expired. Try logging in again.[/yellow]")
         raise SystemExit(1)
     except Exception as e:
         console.print(f"[red]✗ Failed to create note: {e}[/red]")
@@ -140,11 +166,10 @@ def list(url: str, limit: int, fetch_all: bool):
         raise SystemExit(1)
 
     try:
-        client = Client()
         console.print(f"[blue]Loading notes for {url}...[/blue]")
 
-        # Restore session
-        client.login(session_string=session_string)
+        # Create client with automatic session refresh
+        client = create_client_with_session_refresh(config, handle, session_string)
 
         # Collect all matching records
         all_matching_records = []
@@ -197,7 +222,6 @@ def list(url: str, limit: int, fetch_all: bool):
 
     except AtProtocolError as e:
         console.print(f"[red]✗ Failed to list notes: {e}[/red]")
-        console.print("[yellow]Your session may have expired. Try logging in again.[/yellow]")
         raise SystemExit(1)
     except Exception as e:
         console.print(f"[red]✗ Failed to list notes: {e}[/red]")
@@ -237,11 +261,10 @@ def delete(at_uri: str):
 
     # Delete the record
     try:
-        client = Client()
         console.print(f"[blue]Deleting note {at_uri}...[/blue]")
 
-        # Restore session
-        client.login(session_string=session_string)
+        # Create client with automatic session refresh
+        client = create_client_with_session_refresh(config, handle, session_string)
 
         # Delete the record
         client.com.atproto.repo.delete_record(
@@ -258,8 +281,6 @@ def delete(at_uri: str):
         console.print(f"[red]✗ Failed to delete note: {e}[/red]")
         if "not found" in str(e).lower():
             console.print("[yellow]Record may not exist or may have already been deleted.[/yellow]")
-        else:
-            console.print("[yellow]Your session may have expired. Try logging in again.[/yellow]")
         raise SystemExit(1)
     except Exception as e:
         console.print(f"[red]✗ Failed to delete note: {e}[/red]")
