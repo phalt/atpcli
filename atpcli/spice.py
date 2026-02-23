@@ -9,7 +9,7 @@ from rich.console import Console
 
 from atpcli.config import Config
 from atpcli.constants import SPICE_COLLECTION_NAME, SPICE_MAX_TEXT_LENGTH
-from atpcli.display import display_spice_note
+from atpcli.display.spice import display_spice_note
 from atpcli.models import SpiceNote
 from atpcli.session import create_client_with_session_refresh
 

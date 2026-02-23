@@ -7,7 +7,7 @@ from atproto import Client
 from rich.console import Console
 
 from atpcli.config import Config
-from atpcli.display import display_post
+from atpcli.display.bsky import display_post
 from atpcli.session import create_client_with_session_refresh
 from atpcli.spice import spice
 
@@ -117,7 +117,7 @@ def timeline(limit: int, page: int):
 
         for feed_view in reversed_feed:
             post = feed_view.post
-            table = display_post(post)
+            table = display_post(post, client)
             console.print(table)
 
         # Show pagination info

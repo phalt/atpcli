@@ -1,5 +1,5 @@
 import re
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from atproto_client.models.app.bsky.embed.images import View as ImagesView
 from atproto_client.models.app.bsky.embed.record import View as RecordView
@@ -186,8 +186,126 @@ def _is_reply(post: PostView) -> bool:
         return False
 
 
-def display_post(post: PostView) -> Table:
-    """Display a post in the terminal as a table."""
+def _get_embedded_post(post: PostView, client=None) -> Optional[Any]:
+    """Extract the embedded post from a repost or reply.
+
+    Args:
+        post: The post to check
+        client: Optional atproto client for fetching reply parents
+
+    Returns:
+        The embedded post object if available, None otherwise
+    """
+    # Check for reply parent
+    # Note: The timeline API provides post.reply with hydrated parent data,
+    # but it's not always present. If missing, we can fetch it using the URI.
+    if hasattr(post, "reply") and post.reply is not None:
+        parent = getattr(post.reply, "parent", None)
+        if parent:
+            return parent
+
+    # If no hydrated reply but we have a reply reference and a client, fetch the parent
+    if client and hasattr(post.record, "reply") and post.record.reply is not None:
+        try:
+            parent_ref = getattr(post.record.reply, "parent", None)
+            if parent_ref and hasattr(parent_ref, "uri"):
+                # Fetch the parent post using get_posts
+                result = client.get_posts([parent_ref.uri])
+                if result and result.posts and len(result.posts) > 0:
+                    return result.posts[0]
+        except Exception:
+            # If fetching fails, just skip showing the parent
+            pass
+
+    # Check for repost/quote embed
+    if hasattr(post, "embed") and post.embed is not None:
+        if isinstance(post.embed, RecordView):
+            # Direct record embed (quote post)
+            return getattr(post.embed, "record", None)
+        elif isinstance(post.embed, RecordWithMediaView):
+            # Record with media (quote post with images)
+            return getattr(post.embed, "record", None)
+
+    return None
+
+
+def _display_embedded_post(embedded_post) -> Optional[Table]:
+    """Display an embedded post as a smaller nested table.
+
+    Args:
+        embedded_post: The embedded post object (ViewRecord or PostView)
+
+    Returns:
+        Rich Table with the embedded post, or None if cannot be displayed
+    """
+    if not embedded_post:
+        return None
+
+    try:
+        # Extract author info
+        author = getattr(embedded_post, "author", None)
+        if not author:
+            return None
+
+        author_name = getattr(author, "display_name", None) or getattr(author, "handle", "Unknown")
+        author_handle = getattr(author, "handle", "")
+
+        # Extract post content
+        # Quote posts (ViewRecord) have .value.text
+        # Reply parents (PostView) have .record.text
+        text = ""
+        value = getattr(embedded_post, "value", None)
+        if value:
+            # This is a ViewRecord from a quote post
+            text = getattr(value, "text", "")
+        else:
+            # This might be a PostView from a reply parent
+            record = getattr(embedded_post, "record", None)
+            if record:
+                text = getattr(record, "text", "")
+
+        if not text:
+            # If we still don't have text, try to return None
+            return None
+
+        # Extract like count if available (may not be present in all embed types)
+        like_count = getattr(embedded_post, "like_count", 0) or 0
+
+        # Create a smaller nested table
+        nested_table = Table(show_header=False, box=None, padding=(0, 1))
+        nested_table.add_column("Content", style="dim white", overflow="fold")
+        nested_table.add_column("Likes", justify="right", style="dim green", overflow="fold", width=6)
+
+        # Format the embedded post
+        header = Text()
+        header.append("   ↳ ", style="dim")
+        header.append(f"{author_name}", style="dim bold")
+        if author_handle:
+            header.append(f" @{author_handle}", style="dim")
+
+        content = Text()
+        content.append("\n", style="dim")
+        content.append(f"     {text}", style="dim")
+
+        nested_table.add_row(header, "")
+        nested_table.add_row(content, str(like_count) if like_count > 0 else "")
+
+        return nested_table
+    except Exception:
+        # If anything fails, return None and don't show embedded post
+        return None
+
+
+def display_post(post: PostView, client=None) -> Table:
+    """Display a post in the terminal as a table.
+
+    Args:
+        post: The post to display
+        client: Optional atproto client for fetching reply parents
+
+    Returns:
+        Rich Table with the formatted post
+    """
     # Convert AT URI to web URL
     web_url = _at_uri_to_web_url(post.uri, post.author.handle)
 
@@ -217,6 +335,14 @@ def display_post(post: PostView) -> Table:
 
     likes = post.like_count or 0
     table.add_row(rendered_text, str(likes))
+
+    # Add embedded post if this is a quote post or reply
+    embedded_post = _get_embedded_post(post, client)
+    if embedded_post:
+        nested_table = _display_embedded_post(embedded_post)
+        if nested_table:
+            table.add_row(nested_table, "")
+
     return table
 
 
@@ -245,46 +371,3 @@ def get_profile_display(client, did: str, profile_cache: dict) -> str:
         return f"{profile.display_name or profile.handle} (@{profile.handle})"
     else:
         return did
-
-
-def display_spice_note(note, at_uri: str, client, profile_cache: dict) -> Table:
-    """Display a Spice note in the terminal as a table.
-
-    Args:
-        note: SpiceNote instance
-        at_uri: The AT URI of the note
-        client: Authenticated atproto client
-        profile_cache: Dictionary to cache profile lookups
-
-    Returns:
-        Rich Table with the formatted note
-    """
-    # Extract DID from AT URI (format: at://did:plc:xxx/collection/rkey)
-    did = at_uri.split("/")[2]
-
-    # Get formatted author display
-    author_display = get_profile_display(client, did, profile_cache)
-
-    # Get profile from cache to build Bluesky URL
-    profile = profile_cache.get(did)
-    if profile and hasattr(profile, "handle"):
-        # Create clickable author link
-        profile_url = f"https://bsky.app/profile/{profile.handle}"
-        author_link = f"[link={profile_url}]{author_display}[/link]"
-    else:
-        # Fallback to non-clickable display
-        author_link = author_display
-
-    # Create clickable title with author and URL
-    clickable_title = f"{author_link} • [link={note.url}]{note.url}[/link]"
-
-    table = Table(title=clickable_title, show_header=True, expand=True)
-    # Use overflow="fold" to wrap text instead of truncating with ellipsis
-    table.add_column("Note", style="white", overflow="fold")
-    table.add_column("Created", justify="right", style="dim", overflow="fold")
-
-    # Render the note text
-    rendered_text = Text(note.text)
-
-    table.add_row(rendered_text, note.createdAt)
-    return table

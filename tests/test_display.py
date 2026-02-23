@@ -6,7 +6,7 @@ from atproto_client.models.app.bsky.embed.images import View as ImagesView
 from atproto_client.models.app.bsky.embed.record_with_media import View as RecordWithMediaView
 from rich.text import Text
 
-from atpcli.display import _at_uri_to_web_url, _has_image, _render_text_with_links, display_post
+from atpcli.display.bsky import _at_uri_to_web_url, _has_image, _render_text_with_links, display_post
 
 
 def test_at_uri_to_web_url():
