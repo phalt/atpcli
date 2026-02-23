@@ -8,11 +8,17 @@ The `post` command allows you to create new posts on Bluesky directly from the c
 atpcli bsky post --message "Your message here"
 ```
 
+Or use the shorter `-m` option:
+
+```bash
+atpcli bsky post -m "Your message here"
+```
+
 The command will post your message to Bluesky and return a link to the created post.
 
 ## Command Options
 
-- `--message TEXT` - The text content of your post (required)
+- `--message TEXT` / `-m TEXT` - The text content of your post (required)
 
 ## Examples
 
@@ -20,6 +26,8 @@ The command will post your message to Bluesky and return a link to the created p
 
 ```bash
 atpcli bsky post --message "Hello, Bluesky!"
+# Or use the shorter -m option:
+atpcli bsky post -m "Hello, Bluesky!"
 ```
 
 ### Post with Links
@@ -113,11 +121,12 @@ The link is clickable in most terminals and will open the post in your browser.
 
 ## Error Handling
 
-If posting fails (e.g., network error, expired session), you'll see:
+If posting fails (e.g., network error), you'll see:
 
 ```
 ✗ Failed to post: [error message]
-Your session may have expired. Try logging in again.
 ```
 
-In this case, try logging in again with `atpcli bsky login`.
+## Session Management
+
+The CLI automatically refreshes expired sessions, so you won't need to re-login manually. Sessions are automatically saved when they are refreshed, ensuring a seamless experience.
