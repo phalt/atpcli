@@ -8,6 +8,7 @@ from rich.console import Console
 
 from atpcli.config import Config
 from atpcli.display import display_post
+from atpcli.session import create_client_with_session_refresh
 from atpcli.spice import spice
 
 console = Console()
@@ -86,11 +87,10 @@ def timeline(limit: int, page: int):
         raise SystemExit(1)
 
     try:
-        client = Client()
         console.print(f"[blue]Loading timeline for {handle}...[/blue]")
 
-        # Restore session from saved string
-        client.login(session_string=session_string)
+        # Create client with automatic session refresh
+        client = create_client_with_session_refresh(config, handle, session_string)
 
         # Calculate cursor position for pagination
         # Note: We need to fetch pages sequentially to get the cursor for each page.
@@ -129,12 +129,11 @@ def timeline(limit: int, page: int):
 
     except Exception as e:
         console.print(f"[red]✗ Failed to load timeline: {e}[/red]")
-        console.print("[yellow]Your session may have expired. Try logging in again.[/yellow]")
         raise SystemExit(1)
 
 
 @bsky.command()
-@click.option("--message", required=True, help="Message to post")
+@click.option("--message", "-m", required=True, help="Message to post")
 def post(message: str):
     """Post a message to Bluesky."""
     config = Config()
@@ -145,11 +144,10 @@ def post(message: str):
         raise SystemExit(1)
 
     try:
-        client = Client()
         console.print(f"[blue]Posting as {handle}...[/blue]")
 
-        # Restore session from saved string
-        client.login(session_string=session_string)
+        # Create client with automatic session refresh
+        client = create_client_with_session_refresh(config, handle, session_string)
 
         # Send the post
         response = client.send_post(text=message)
@@ -163,7 +161,6 @@ def post(message: str):
 
     except Exception as e:
         console.print(f"[red]✗ Failed to post: {e}[/red]")
-        console.print("[yellow]Your session may have expired. Try logging in again.[/yellow]")
         raise SystemExit(1)
 
 

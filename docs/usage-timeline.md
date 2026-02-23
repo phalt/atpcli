@@ -78,25 +78,26 @@ atpcli bsky timeline --limit 20 --p 2
 
 ## Output Format
 
-The timeline is displayed as a table with three columns:
+The timeline is displayed as a table with post information:
 
-1. **Author**: Display name or handle of the post author
-2. **Post**: The text content of the post (truncated if too long)
+1. **Author**: Display name and handle of the post author with emoji indicators:
+   - ⤴️ Reply to another post
+   - 🔁 Repost or quote post
+   - 📷 Post with images (if not a reply or repost)
+2. **Post**: The text content of the post (wrapped to fit)
 3. **Likes**: Number of likes the post has received
 
-### Text Truncation
+### Emoji Indicators
 
-Long posts are automatically truncated to fit in the table:
+Posts are prefixed with emojis to indicate their type:
 
-- Posts longer than 80 characters are shortened
-- Truncated posts end with `...`
+- **⤴️** Reply: This post is a reply to another post
+- **🔁** Repost/Quote: This post quotes or reposts another post
+- **📷** Image: This post contains images (shown only if not a reply or repost)
 
-Example:
+### Text Wrapping
 
-```
-Original: "This is a very long post about my experience with the new technology and how it has changed my workflow dramatically..."
-Displayed: "This is a very long post about my experience with the new technology and h..."
-```
+Long posts are automatically wrapped to fit in the table for better readability.
 
 ## Requirements
 
@@ -121,15 +122,18 @@ $ atpcli bsky timeline
 
 ### Session Expired
 
-If your session has expired:
+Sessions are automatically refreshed when they expire, so you should rarely encounter this issue. If your session cannot be refreshed:
 
 ```bash
 $ atpcli bsky timeline
 ✗ Failed to load timeline: ...
-Your session may have expired. Try logging in again.
 ```
 
 **Solution**: Login again with `atpcli bsky login`.
+
+## Session Management
+
+The CLI automatically refreshes expired sessions in the background. When a session is refreshed, it's automatically saved to your config file, ensuring a seamless experience without needing to re-login.
 
 ## Performance
 
@@ -180,10 +184,9 @@ The timeline shows:
 
 Current limitations of the timeline command:
 
-- **Text only**: Images, videos, and embeds are not displayed
+- **No video playback**: Videos are not displayed in the terminal
 - **No interactions**: Can't like, reply, or repost from the CLI (yet)
 - **No filtering**: Shows all posts without filtering by type or author
-- **No pagination**: Must specify limit upfront (no "load more")
 
 ## Troubleshooting
 

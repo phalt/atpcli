@@ -11,6 +11,7 @@ from rich.console import Console
 from atpcli.config import Config
 from atpcli.constants import SPICE_COLLECTION_NAME, SPICE_MAX_TEXT_LENGTH
 from atpcli.models import SpiceNote
+from atpcli.session import create_client_with_session_refresh
 
 console = Console()
 
@@ -89,11 +90,10 @@ def add(url: str, text: str):
 
     # Create the record
     try:
-        client = Client()
         console.print(f"[blue]Creating note for {url}...[/blue]")
 
-        # Restore session
-        client.login(session_string=session_string)
+        # Create client with automatic session refresh
+        client = create_client_with_session_refresh(config, handle, session_string)
 
         # Create the record using pydantic model
         record = note.to_record()
@@ -113,7 +113,6 @@ def add(url: str, text: str):
 
     except AtProtocolError as e:
         console.print(f"[red]✗ Failed to create note: {e}[/red]")
-        console.print("[yellow]Your session may have expired. Try logging in again.[/yellow]")
         raise SystemExit(1)
     except Exception as e:
         console.print(f"[red]✗ Failed to create note: {e}[/red]")
@@ -140,11 +139,10 @@ def list(url: str, limit: int, fetch_all: bool):
         raise SystemExit(1)
 
     try:
-        client = Client()
         console.print(f"[blue]Loading notes for {url}...[/blue]")
 
-        # Restore session
-        client.login(session_string=session_string)
+        # Create client with automatic session refresh
+        client = create_client_with_session_refresh(config, handle, session_string)
 
         # Collect all matching records
         all_matching_records = []
@@ -197,7 +195,6 @@ def list(url: str, limit: int, fetch_all: bool):
 
     except AtProtocolError as e:
         console.print(f"[red]✗ Failed to list notes: {e}[/red]")
-        console.print("[yellow]Your session may have expired. Try logging in again.[/yellow]")
         raise SystemExit(1)
     except Exception as e:
         console.print(f"[red]✗ Failed to list notes: {e}[/red]")
@@ -237,11 +234,10 @@ def delete(at_uri: str):
 
     # Delete the record
     try:
-        client = Client()
         console.print(f"[blue]Deleting note {at_uri}...[/blue]")
 
-        # Restore session
-        client.login(session_string=session_string)
+        # Create client with automatic session refresh
+        client = create_client_with_session_refresh(config, handle, session_string)
 
         # Delete the record
         client.com.atproto.repo.delete_record(
@@ -258,8 +254,6 @@ def delete(at_uri: str):
         console.print(f"[red]✗ Failed to delete note: {e}[/red]")
         if "not found" in str(e).lower():
             console.print("[yellow]Record may not exist or may have already been deleted.[/yellow]")
-        else:
-            console.print("[yellow]Your session may have expired. Try logging in again.[/yellow]")
         raise SystemExit(1)
     except Exception as e:
         console.print(f"[red]✗ Failed to delete note: {e}[/red]")

@@ -2,6 +2,7 @@ import re
 from typing import List, Optional
 
 from atproto_client.models.app.bsky.embed.images import View as ImagesView
+from atproto_client.models.app.bsky.embed.record import View as RecordView
 from atproto_client.models.app.bsky.embed.record_with_media import View as RecordWithMediaView
 from atproto_client.models.app.bsky.feed.defs import PostView
 from atproto_client.models.app.bsky.richtext.facet import Link as LinkFacet
@@ -145,6 +146,46 @@ def _has_image(post: PostView) -> bool:
     return False
 
 
+def _is_repost_or_quote(post: PostView) -> bool:
+    """Check if a post is a repost or quote post.
+    
+    Args:
+        post: The post to check
+        
+    Returns:
+        True if the post is a repost or quote (has a record embed), False otherwise
+    """
+    if not hasattr(post, "embed") or post.embed is None:
+        return False
+    
+    # Check if it's a record embed (quote post)
+    if isinstance(post.embed, RecordView):
+        return True
+    
+    # Check if it's a record with media (quote post with images)
+    if isinstance(post.embed, RecordWithMediaView):
+        return True
+    
+    return False
+
+
+def _is_reply(post: PostView) -> bool:
+    """Check if a post is a reply to another post.
+    
+    Args:
+        post: The post to check
+        
+    Returns:
+        True if the post is a reply, False otherwise
+    """
+    # Check if the post record has a reply field with actual content
+    try:
+        reply = getattr(post.record, "reply", None)
+        return reply is not None
+    except AttributeError:
+        return False
+
+
 def display_post(post: PostView) -> Table:
     """Display a post in the terminal as a table."""
     # Convert AT URI to web URL
@@ -153,8 +194,13 @@ def display_post(post: PostView) -> Table:
     # Create clickable title
     title = f"{post.author.display_name} (@{post.author.handle})"
 
-    # Add image indicator if post has images
-    if _has_image(post):
+    # Add appropriate emoji indicator
+    # Priority: reply > repost/quote > image
+    if _is_reply(post):
+        title = f"⤴️ {title}"
+    elif _is_repost_or_quote(post):
+        title = f"🔁 {title}"
+    elif _has_image(post):
         title = f"📷 {title}"
 
     clickable_title = f"[link={web_url}]{title}[/link]"
