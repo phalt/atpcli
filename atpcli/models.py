@@ -1,0 +1,58 @@
+"""Pydantic models for Spice."""
+
+from datetime import datetime
+from urllib.parse import urlparse
+
+from pydantic import BaseModel, Field, field_validator
+
+from atpcli.constants import SPICE_COLLECTION_NAME, SPICE_MAX_TEXT_LENGTH
+
+
+class SpiceNote(BaseModel):
+    """Model for a Spice note record."""
+
+    url: str = Field(..., description="The fully-qualified URL being annotated")
+    text: str = Field(..., max_length=SPICE_MAX_TEXT_LENGTH, description="The annotation text")
+    createdAt: str = Field(..., description="ISO 8601 / RFC 3339 datetime of record creation")
+
+    @field_validator("url")
+    @classmethod
+    def validate_url(cls, v: str) -> str:
+        """Validate that URL has scheme and host."""
+        parsed = urlparse(v)
+        if not parsed.scheme or not parsed.netloc:
+            raise ValueError("URL must include scheme and host (e.g., https://example.com)")
+        return v
+
+    @field_validator("text")
+    @classmethod
+    def validate_text(cls, v: str) -> str:
+        """Validate that text is not empty."""
+        if not v or not v.strip():
+            raise ValueError("Text cannot be empty")
+        return v
+
+    @field_validator("createdAt")
+    @classmethod
+    def validate_created_at(cls, v: str) -> str:
+        """Validate that createdAt is a valid UTC timestamp in RFC 3339 format."""
+        try:
+            # Parse the datetime to ensure it's valid
+            dt = datetime.fromisoformat(v.replace("Z", "+00:00"))
+            # Ensure it's in UTC by checking if it ends with Z or has +00:00 offset
+            if not (v.endswith("Z") or v.endswith("+00:00")):
+                raise ValueError("Timestamp must be in UTC (should end with 'Z' or '+00:00')")
+            return v
+        except (ValueError, AttributeError):
+            raise ValueError(
+                "Invalid datetime format. Expected ISO 8601 / RFC 3339 format with UTC timezone (e.g., 2024-01-01T00:00:00Z)"
+            )
+
+    def to_record(self) -> dict:
+        """Convert to atproto record format."""
+        return {
+            "url": self.url,
+            "text": self.text,
+            "createdAt": self.createdAt,
+            "$type": SPICE_COLLECTION_NAME,
+        }
