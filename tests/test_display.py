@@ -6,7 +6,7 @@ from atproto_client.models.app.bsky.embed.images import View as ImagesView
 from atproto_client.models.app.bsky.embed.record_with_media import View as RecordWithMediaView
 from rich.text import Text
 
-from atpcli.display.bsky import _at_uri_to_web_url, _has_image, _render_text_with_links, display_post
+from atpcli.display.bsky import _at_uri_to_web_url, _has_image, _render_text_with_links, display_feeds, display_post
 
 
 def test_at_uri_to_web_url():
@@ -452,3 +452,48 @@ def test_is_repost_or_quote():
     # Test with images embed
     mock_post.embed = ImagesView(images=[])
     assert _is_repost_or_quote(mock_post) is False
+
+
+def test_display_feeds():
+    """Test display_feeds function."""
+    feed_details = [
+        {
+            "name": "Discover Feed",
+            "uri": "at://did:plc:test/app.bsky.feed.generator/discover",
+            "description": "Discover new content",
+        },
+        {
+            "name": "Popular Feed",
+            "uri": "at://did:plc:test/app.bsky.feed.generator/popular",
+            "description": "Popular posts",
+        },
+    ]
+
+    table = display_feeds(feed_details)
+
+    # Check that table has the correct title
+    assert "Saved Feeds (2)" in table.title
+
+    # Check that table has correct number of columns
+    assert len(table.columns) == 3
+
+    # Check column names and styles
+    assert table.columns[0].header == "Feed Name"
+    assert table.columns[0].style == "cyan"
+    assert table.columns[1].header == "URI"
+    assert table.columns[1].style == "dim white"
+    assert table.columns[2].header == "Description"
+    assert table.columns[2].style == "white"
+
+
+def test_display_feeds_empty():
+    """Test display_feeds function with empty list."""
+    feed_details = []
+
+    table = display_feeds(feed_details)
+
+    # Check that table has the correct title
+    assert "Saved Feeds (0)" in table.title
+
+    # Table should have 3 columns even if empty
+    assert len(table.columns) == 3

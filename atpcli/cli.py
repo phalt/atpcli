@@ -5,11 +5,10 @@ import textwrap
 import click
 from atproto import Client
 from rich.console import Console
-from rich.table import Table
 
 from atpcli.config import Config
 from atpcli.constants import DEFAULT_PDS_URL
-from atpcli.display.bsky import display_post
+from atpcli.display.bsky import display_feeds, display_post
 from atpcli.session import create_client_with_session_refresh
 from atpcli.spice import spice
 
@@ -227,15 +226,8 @@ def feeds(output_format: str):
                 # If we can't fetch details, just show the URI
                 feed_details.append({"name": feed_uri.split("/")[-1], "uri": feed_uri, "description": ""})
 
-        # Create and display table
-        table = Table(title=f"Saved Feeds ({len(feed_details)})", show_header=True, expand=True)
-        table.add_column("Feed Name", style="cyan", overflow="fold")
-        table.add_column("URI", style="dim white", overflow="fold")
-        table.add_column("Description", style="white", overflow="fold")
-
-        for feed in feed_details:
-            table.add_row(feed["name"], feed["uri"], feed["description"])
-
+        # Display table using display function
+        table = display_feeds(feed_details)
         console.print(table)
         console.print("\n[dim]Use 'atpcli bsky feed <uri>' to view posts from a specific feed.[/dim]")
 
