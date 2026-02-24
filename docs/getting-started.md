@@ -32,7 +32,7 @@ For security reasons, atpcli uses **app passwords** instead of your main Bluesky
 Once you have your app password, you can login to atpcli:
 
 ```bash
-atpcli bsky login
+atpcli login
 ```
 
 You'll be prompted for:
@@ -43,7 +43,7 @@ You'll be prompted for:
 Example:
 
 ```bash
-$ atpcli bsky login
+$ atpcli login
 Handle: alice.bsky.social
 Password: ****
 ✓ Successfully logged in as Alice
@@ -118,10 +118,10 @@ Showing 3 posts
 If you see this error:
 
 ```
-✗ Not logged in. Please run 'atpcli bsky login' first.
+✗ Not logged in. Please run 'atpcli login' first.
 ```
 
-Simply run `atpcli bsky login` to authenticate.
+Simply run `atpcli login` to authenticate.
 
 ### "Login failed" Error
 
@@ -136,7 +136,7 @@ This usually means:
 If your session expires, simply login again:
 
 ```bash
-atpcli bsky login
+atpcli login
 ```
 
 ## Security Best Practices

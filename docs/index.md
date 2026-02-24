@@ -19,7 +19,7 @@ atpcli is a minimal command-line interface for interacting with [Bluesky](https:
 
 ```bash
 # Login to Bluesky
-atpcli bsky login
+atpcli login
 
 # View your timeline
 atpcli bsky timeline --limit 10

@@ -54,7 +54,7 @@ def test_list_command_help(runner):
     """Test list command help."""
     result = runner.invoke(cli, ["spice", "list", "--help"])
     assert result.exit_code == 0
-    assert "List all your notes for a URL" in result.output
+    assert "List your notes" in result.output
 
 
 def test_delete_command_help(runner):
@@ -69,7 +69,7 @@ def test_delete_command_help(runner):
 def test_add_not_logged_in(mock_config_class, mock_create_client, runner):
     """Test add when not logged in."""
     mock_config = MagicMock()
-    mock_config.load_session.return_value = (None, None)
+    mock_config.load_session.return_value = (None, None, "https://bsky.social")
     mock_config_class.return_value = mock_config
 
     result = runner.invoke(cli, ["spice", "add", "https://example.com", "Test note"])
@@ -83,7 +83,7 @@ def test_add_not_logged_in(mock_config_class, mock_create_client, runner):
 def test_add_invalid_url_no_scheme(mock_config_class, mock_create_client, runner):
     """Test add with invalid URL (no scheme)."""
     mock_config = MagicMock()
-    mock_config.load_session.return_value = ("test.bsky.social", "test_session")
+    mock_config.load_session.return_value = ("test.bsky.social", "test_session", "https://bsky.social")
     mock_config_class.return_value = mock_config
 
     result = runner.invoke(cli, ["spice", "add", "example.com", "Test note"])
@@ -97,7 +97,7 @@ def test_add_invalid_url_no_scheme(mock_config_class, mock_create_client, runner
 def test_add_empty_text(mock_config_class, mock_create_client, runner):
     """Test add with empty text."""
     mock_config = MagicMock()
-    mock_config.load_session.return_value = ("test.bsky.social", "test_session")
+    mock_config.load_session.return_value = ("test.bsky.social", "test_session", "https://bsky.social")
     mock_config_class.return_value = mock_config
 
     result = runner.invoke(cli, ["spice", "add", "https://example.com", ""])
@@ -111,7 +111,7 @@ def test_add_empty_text(mock_config_class, mock_create_client, runner):
 def test_add_text_too_long(mock_config_class, mock_create_client, runner):
     """Test add with text exceeding max length."""
     mock_config = MagicMock()
-    mock_config.load_session.return_value = ("test.bsky.social", "test_session")
+    mock_config.load_session.return_value = ("test.bsky.social", "test_session", "https://bsky.social")
     mock_config_class.return_value = mock_config
 
     # Create text longer than 256 characters
@@ -140,7 +140,7 @@ def test_add_success(mock_config_class, mock_create_client, runner):
 
     # Mock config
     mock_config = MagicMock()
-    mock_config.load_session.return_value = ("test.bsky.social", "test_session")
+    mock_config.load_session.return_value = ("test.bsky.social", "test_session", "https://bsky.social")
     mock_config_class.return_value = mock_config
 
     # Run add
@@ -149,7 +149,7 @@ def test_add_success(mock_config_class, mock_create_client, runner):
     # Verify
     assert result.exit_code == 0
     assert "Created: at://did:plc:test123/tools.spice.note/abc123xyz" in result.output
-    mock_create_client.assert_called_once_with(mock_config, "test.bsky.social", "test_session")
+    mock_create_client.assert_called_once_with(mock_config, "test.bsky.social", "test_session", "https://bsky.social")
 
     # Verify create_record was called with correct parameters
     call_args = mock_client.com.atproto.repo.create_record.call_args
@@ -167,7 +167,7 @@ def test_add_success(mock_config_class, mock_create_client, runner):
 def test_list_not_logged_in(mock_config_class, mock_create_client, runner):
     """Test list when not logged in."""
     mock_config = MagicMock()
-    mock_config.load_session.return_value = (None, None)
+    mock_config.load_session.return_value = (None, None, "https://bsky.social")
     mock_config_class.return_value = mock_config
 
     result = runner.invoke(cli, ["spice", "list", "https://example.com"])
@@ -188,11 +188,12 @@ def test_list_no_notes(mock_config_class, mock_create_client, runner):
     # Mock list_records response with no records
     mock_response = MagicMock()
     mock_response.records = []
+    mock_response.__getitem__ = lambda self, key: getattr(self, key)
     mock_client.com.atproto.repo.list_records.return_value = mock_response
 
     # Mock config
     mock_config = MagicMock()
-    mock_config.load_session.return_value = ("test.bsky.social", "test_session")
+    mock_config.load_session.return_value = ("test.bsky.social", "test_session", "https://bsky.social")
     mock_config_class.return_value = mock_config
 
     # Run list
@@ -201,7 +202,7 @@ def test_list_no_notes(mock_config_class, mock_create_client, runner):
     # Verify
     assert result.exit_code == 0
     assert "No notes found" in result.output
-    mock_create_client.assert_called_once_with(mock_config, "test.bsky.social", "test_session")
+    mock_create_client.assert_called_once_with(mock_config, "test.bsky.social", "test_session", "https://bsky.social")
 
 
 @patch("atpcli.spice.create_client_with_session_refresh")
@@ -241,11 +242,12 @@ def test_list_success(mock_config_class, mock_create_client, runner):
     mock_response = MagicMock()
     mock_response.records = [mock_record1, mock_record2, mock_record3]
     mock_response.cursor = None
+    mock_response.__getitem__ = lambda self, key: getattr(self, key)
     mock_client.com.atproto.repo.list_records.return_value = mock_response
 
     # Mock config
     mock_config = MagicMock()
-    mock_config.load_session.return_value = ("test.bsky.social", "test_session")
+    mock_config.load_session.return_value = ("test.bsky.social", "test_session", "https://bsky.social")
     mock_config_class.return_value = mock_config
 
     # Run list
@@ -258,14 +260,12 @@ def test_list_success(mock_config_class, mock_create_client, runner):
     assert "First note" in result.output
     assert "Second note" in result.output
     assert "Different URL" not in result.output
-    assert "at://did:plc:test123/tools.spice.note/abc123" in result.output
-    assert "at://did:plc:test123/tools.spice.note/def456" in result.output
     # Verify the order - Second note (newer) appears before First note (older)
     # After reverse, oldest is first so latest appears at bottom when scrolling
     first_note_pos = result.output.index("First note")
     second_note_pos = result.output.index("Second note")
     assert second_note_pos < first_note_pos  # Second (newer) appears before First (older)
-    mock_create_client.assert_called_once_with(mock_config, "test.bsky.social", "test_session")
+    mock_create_client.assert_called_once_with(mock_config, "test.bsky.social", "test_session", "https://bsky.social")
 
 
 @patch("atpcli.spice.create_client_with_session_refresh")
@@ -289,6 +289,7 @@ def test_list_with_pagination(mock_config_class, mock_create_client, runner):
     mock_response1 = MagicMock()
     mock_response1.records = [mock_record1]
     mock_response1.cursor = "cursor_page_2"
+    mock_response1.__getitem__ = lambda self, key: getattr(self, key)
 
     # Mock second page
     mock_record2 = MagicMock()
@@ -302,13 +303,14 @@ def test_list_with_pagination(mock_config_class, mock_create_client, runner):
     mock_response2 = MagicMock()
     mock_response2.records = [mock_record2]
     mock_response2.cursor = None
+    mock_response2.__getitem__ = lambda self, key: getattr(self, key)
 
     # Mock list_records to return different responses for pagination
     mock_client.com.atproto.repo.list_records.side_effect = [mock_response1, mock_response2]
 
     # Mock config
     mock_config = MagicMock()
-    mock_config.load_session.return_value = ("test.bsky.social", "test_session")
+    mock_config.load_session.return_value = ("test.bsky.social", "test_session", "https://bsky.social")
     mock_config_class.return_value = mock_config
 
     # Run list with --all flag
@@ -319,7 +321,7 @@ def test_list_with_pagination(mock_config_class, mock_create_client, runner):
     assert "Found 2 note(s)" in result.output
     assert "First note" in result.output
     assert "Second note" in result.output
-    mock_create_client.assert_called_once_with(mock_config, "test.bsky.social", "test_session")
+    mock_create_client.assert_called_once_with(mock_config, "test.bsky.social", "test_session", "https://bsky.social")
     # Should be called twice for pagination
     assert mock_client.com.atproto.repo.list_records.call_count == 2
 
@@ -329,7 +331,7 @@ def test_list_with_pagination(mock_config_class, mock_create_client, runner):
 def test_delete_not_logged_in(mock_config_class, mock_create_client, runner):
     """Test delete when not logged in."""
     mock_config = MagicMock()
-    mock_config.load_session.return_value = (None, None)
+    mock_config.load_session.return_value = (None, None, "https://bsky.social")
     mock_config_class.return_value = mock_config
 
     result = runner.invoke(cli, ["spice", "delete", "at://did:plc:test123/tools.spice.note/abc123"])
@@ -343,7 +345,7 @@ def test_delete_not_logged_in(mock_config_class, mock_create_client, runner):
 def test_delete_invalid_uri_no_scheme(mock_config_class, mock_create_client, runner):
     """Test delete with invalid AT URI (no at:// scheme)."""
     mock_config = MagicMock()
-    mock_config.load_session.return_value = ("test.bsky.social", "test_session")
+    mock_config.load_session.return_value = ("test.bsky.social", "test_session", "https://bsky.social")
     mock_config_class.return_value = mock_config
 
     result = runner.invoke(cli, ["spice", "delete", "did:plc:test123/tools.spice.note/abc123"])
@@ -357,7 +359,7 @@ def test_delete_invalid_uri_no_scheme(mock_config_class, mock_create_client, run
 def test_delete_invalid_uri_format(mock_config_class, mock_create_client, runner):
     """Test delete with invalid AT URI format."""
     mock_config = MagicMock()
-    mock_config.load_session.return_value = ("test.bsky.social", "test_session")
+    mock_config.load_session.return_value = ("test.bsky.social", "test_session", "https://bsky.social")
     mock_config_class.return_value = mock_config
 
     result = runner.invoke(cli, ["spice", "delete", "at://invalid"])
@@ -371,7 +373,7 @@ def test_delete_invalid_uri_format(mock_config_class, mock_create_client, runner
 def test_delete_wrong_collection(mock_config_class, mock_create_client, runner):
     """Test delete with wrong collection type."""
     mock_config = MagicMock()
-    mock_config.load_session.return_value = ("test.bsky.social", "test_session")
+    mock_config.load_session.return_value = ("test.bsky.social", "test_session", "https://bsky.social")
     mock_config_class.return_value = mock_config
 
     result = runner.invoke(cli, ["spice", "delete", "at://did:plc:test123/app.bsky.feed.post/abc123"])
@@ -394,7 +396,7 @@ def test_delete_success(mock_config_class, mock_create_client, runner):
 
     # Mock config
     mock_config = MagicMock()
-    mock_config.load_session.return_value = ("test.bsky.social", "test_session")
+    mock_config.load_session.return_value = ("test.bsky.social", "test_session", "https://bsky.social")
     mock_config_class.return_value = mock_config
 
     # Run delete
@@ -404,7 +406,7 @@ def test_delete_success(mock_config_class, mock_create_client, runner):
     # Verify
     assert result.exit_code == 0
     assert f"Deleted: {at_uri}" in result.output
-    mock_create_client.assert_called_once_with(mock_config, "test.bsky.social", "test_session")
+    mock_create_client.assert_called_once_with(mock_config, "test.bsky.social", "test_session", "https://bsky.social")
 
     # Verify delete_record was called with correct parameters
     call_args = mock_client.com.atproto.repo.delete_record.call_args

@@ -19,7 +19,7 @@ The name "Spice" reflects the idea of adding flavor to any corner of the web —
 You must be logged in before using Spice commands. If you haven't logged in yet, run:
 
 ```bash
-atpcli bsky login
+atpcli login
 ```
 
 This will save your session, which the Spice commands will use.
@@ -145,10 +145,10 @@ Common errors you might encounter:
 ### Not Logged In
 
 ```
-✗ Not logged in. Please run 'atpcli bsky login' first.
+✗ Not logged in. Please run 'atpcli login' first.
 ```
 
-**Solution:** Run `atpcli bsky login` to authenticate.
+**Solution:** Run `atpcli login` to authenticate.
 
 ### Invalid URL
 
@@ -174,7 +174,7 @@ URL must include scheme and host (e.g., https://example.com)
 Your session may have expired. Try logging in again.
 ```
 
-**Solution:** Run `atpcli bsky login` to refresh your session.
+**Solution:** Run `atpcli login` to refresh your session.
 
 ## Technical Details
 
