@@ -39,7 +39,7 @@ def test_bsky_group(runner):
 
 def test_login_command_help(runner):
     """Test login command help."""
-    result = runner.invoke(cli, ["bsky", "login", "--help"])
+    result = runner.invoke(cli, ["login", "--help"])
     assert result.exit_code == 0
     assert "Login" in result.output
 
@@ -69,13 +69,43 @@ def test_login_success(mock_config_class, mock_client_class, runner, temp_config
     mock_config_class.return_value = mock_config
 
     # Run login
-    result = runner.invoke(cli, ["bsky", "login", "--handle", "test.bsky.social", "--password", "testpass"])
+    result = runner.invoke(cli, ["login", "--handle", "test.bsky.social", "--password", "testpass"])
 
     # Verify
     assert result.exit_code == 0
     assert "Successfully logged in" in result.output
+    mock_client_class.assert_called_once_with(base_url="https://bsky.social")
     mock_client.login.assert_called_once_with("test.bsky.social", "testpass")
-    mock_config.save_session.assert_called_once_with("test.bsky.social", "test_session")
+    mock_config.save_session.assert_called_once_with("test.bsky.social", "test_session", "https://bsky.social")
+
+
+@patch("atpcli.cli.Client")
+@patch("atpcli.cli.Config")
+def test_login_custom_pds(mock_config_class, mock_client_class, runner, temp_config):
+    """Test login with custom PDS URL."""
+    # Setup mocks
+    mock_client = MagicMock()
+    mock_client_class.return_value = mock_client
+
+    mock_profile = MagicMock()
+    mock_profile.display_name = "Test User"
+    mock_client.login.return_value = mock_profile
+    mock_client.export_session_string.return_value = "test_session"
+
+    mock_config = MagicMock()
+    mock_config.config_file = temp_config / "config.json"
+    mock_config_class.return_value = mock_config
+
+    # Run login with custom PDS
+    result = runner.invoke(
+        cli, ["login", "https://my-pds.com", "--handle", "test.custom.social", "--password", "testpass"]
+    )
+
+    # Verify custom PDS URL was used
+    assert result.exit_code == 0
+    assert "Successfully logged in" in result.output
+    mock_client_class.assert_called_once_with(base_url="https://my-pds.com")
+    mock_config.save_session.assert_called_once_with("test.custom.social", "test_session", "https://my-pds.com")
 
 
 @patch("atpcli.cli.create_client_with_session_refresh")
@@ -83,7 +113,7 @@ def test_login_success(mock_config_class, mock_client_class, runner, temp_config
 def test_timeline_not_logged_in(mock_config_class, mock_create_client, runner):
     """Test timeline when not logged in."""
     mock_config = MagicMock()
-    mock_config.load_session.return_value = (None, None)
+    mock_config.load_session.return_value = (None, None, "https://bsky.social")
     mock_config_class.return_value = mock_config
 
     result = runner.invoke(cli, ["bsky", "timeline"])
@@ -118,7 +148,7 @@ def test_timeline_success(mock_config_class, mock_create_client, runner):
 
     # Mock config
     mock_config = MagicMock()
-    mock_config.load_session.return_value = ("test.bsky.social", "test_session")
+    mock_config.load_session.return_value = ("test.bsky.social", "test_session", "https://bsky.social")
     mock_config_class.return_value = mock_config
 
     # Run timeline
@@ -130,7 +160,7 @@ def test_timeline_success(mock_config_class, mock_create_client, runner):
     assert "Test Author" in result.output
     assert "Test post" in result.output
     assert "Showing 1 posts" in result.output
-    mock_create_client.assert_called_once_with(mock_config, "test.bsky.social", "test_session")
+    mock_create_client.assert_called_once_with(mock_config, "test.bsky.social", "test_session", "https://bsky.social")
     mock_client.get_timeline.assert_called_once_with(limit=10, cursor=None)
 
 
@@ -167,7 +197,7 @@ def test_timeline_with_pagination(mock_config_class, mock_create_client, runner)
 
     # Mock config
     mock_config = MagicMock()
-    mock_config.load_session.return_value = ("test.bsky.social", "test_session")
+    mock_config.load_session.return_value = ("test.bsky.social", "test_session", "https://bsky.social")
     mock_config_class.return_value = mock_config
 
     # Run timeline with page 2
@@ -179,7 +209,7 @@ def test_timeline_with_pagination(mock_config_class, mock_create_client, runner)
     assert "Test post on page 2" in result.output
     assert "page 2" in result.output
     assert "--p 3" in result.output  # Should show next page hint
-    mock_create_client.assert_called_once_with(mock_config, "test.bsky.social", "test_session")
+    mock_create_client.assert_called_once_with(mock_config, "test.bsky.social", "test_session", "https://bsky.social")
     # Should be called twice: once to skip page 1, once to get page 2
     assert mock_client.get_timeline.call_count == 2
 
@@ -196,7 +226,7 @@ def test_post_command_help(runner):
 def test_post_not_logged_in(mock_config_class, mock_create_client, runner):
     """Test post when not logged in."""
     mock_config = MagicMock()
-    mock_config.load_session.return_value = (None, None)
+    mock_config.load_session.return_value = (None, None, "https://bsky.social")
     mock_config_class.return_value = mock_config
 
     result = runner.invoke(cli, ["bsky", "post", "--message", "Test post"])
@@ -220,7 +250,7 @@ def test_post_success(mock_config_class, mock_create_client, runner):
 
     # Mock config
     mock_config = MagicMock()
-    mock_config.load_session.return_value = ("test.bsky.social", "test_session")
+    mock_config.load_session.return_value = ("test.bsky.social", "test_session", "https://bsky.social")
     mock_config_class.return_value = mock_config
 
     # Run post
@@ -230,7 +260,7 @@ def test_post_success(mock_config_class, mock_create_client, runner):
     assert result.exit_code == 0
     assert "Post created successfully" in result.output
     assert "https://bsky.app/profile/test.bsky.social/post/abc123xyz" in result.output
-    mock_create_client.assert_called_once_with(mock_config, "test.bsky.social", "test_session")
+    mock_create_client.assert_called_once_with(mock_config, "test.bsky.social", "test_session", "https://bsky.social")
     mock_client.send_post.assert_called_once_with(text="Hello Bluesky!")
 
 
@@ -249,7 +279,7 @@ def test_post_with_short_option(mock_config_class, mock_create_client, runner):
 
     # Mock config
     mock_config = MagicMock()
-    mock_config.load_session.return_value = ("test.bsky.social", "test_session")
+    mock_config.load_session.return_value = ("test.bsky.social", "test_session", "https://bsky.social")
     mock_config_class.return_value = mock_config
 
     # Run post with -m short option
@@ -272,7 +302,7 @@ def test_post_failure(mock_config_class, mock_create_client, runner):
 
     # Mock config
     mock_config = MagicMock()
-    mock_config.load_session.return_value = ("test.bsky.social", "test_session")
+    mock_config.load_session.return_value = ("test.bsky.social", "test_session", "https://bsky.social")
     mock_config_class.return_value = mock_config
 
     # Run post
