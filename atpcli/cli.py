@@ -7,6 +7,7 @@ from atproto import Client
 from rich.console import Console
 
 from atpcli.config import Config
+from atpcli.constants import DEFAULT_PDS_URL
 from atpcli.display.bsky import display_post
 from atpcli.session import create_client_with_session_refresh
 from atpcli.spice import spice
@@ -50,14 +51,15 @@ cli.add_command(bsky)
 cli.add_command(spice)
 
 
-@bsky.command()
-@click.option("--handle", prompt="Handle", help="Your Bluesky handle")
-@click.option("--password", prompt="Password", hide_input=True, help="Your Bluesky password")
-def login(handle: str, password: str):
-    """Login to Bluesky and save session."""
+@cli.command()
+@click.argument("pds_url", required=False, default=DEFAULT_PDS_URL)
+@click.option("--handle", prompt="Handle", help="Your AT Protocol handle")
+@click.option("--password", prompt="Password", hide_input=True, help="Your app password")
+def login(pds_url: str, handle: str, password: str):
+    """Login to an AT Protocol PDS and save session."""
     try:
-        client = Client()
-        console.print(f"[blue]Logging in as {handle}...[/blue]")
+        client = Client(base_url=pds_url)
+        console.print(f"[blue]Logging in to {pds_url} as {handle}...[/blue]")
         profile = client.login(handle, password)
 
         # Get the session string from the client
@@ -65,7 +67,7 @@ def login(handle: str, password: str):
 
         # Save the session
         config = Config()
-        config.save_session(handle, session_string)
+        config.save_session(handle, session_string, pds_url)
 
         console.print(f"[green]✓ Successfully logged in as {profile.display_name or handle}[/green]")
         console.print(f"[dim]Session saved to {config.config_file}[/dim]")
@@ -80,17 +82,17 @@ def login(handle: str, password: str):
 def timeline(limit: int, page: int):
     """View your timeline."""
     config = Config()
-    handle, session_string = config.load_session()
+    handle, session_string, pds_url = config.load_session()
 
     if not session_string:
-        console.print("[red]✗ Not logged in. Please run 'atpcli bsky login' first.[/red]")
+        console.print("[red]✗ Not logged in. Please run 'atpcli login' first.[/red]")
         raise SystemExit(1)
 
     try:
         console.print(f"[blue]Loading timeline for {handle}...[/blue]")
 
         # Create client with automatic session refresh
-        client = create_client_with_session_refresh(config, handle, session_string)
+        client = create_client_with_session_refresh(config, handle, session_string, pds_url)
 
         # Calculate cursor position for pagination
         # Note: We need to fetch pages sequentially to get the cursor for each page.
@@ -137,17 +139,17 @@ def timeline(limit: int, page: int):
 def post(message: str):
     """Post a message to Bluesky."""
     config = Config()
-    handle, session_string = config.load_session()
+    handle, session_string, pds_url = config.load_session()
 
     if not session_string:
-        console.print("[red]✗ Not logged in. Please run 'atpcli bsky login' first.[/red]")
+        console.print("[red]✗ Not logged in. Please run 'atpcli login' first.[/red]")
         raise SystemExit(1)
 
     try:
         console.print(f"[blue]Posting as {handle}...[/blue]")
 
         # Create client with automatic session refresh
-        client = create_client_with_session_refresh(config, handle, session_string)
+        client = create_client_with_session_refresh(config, handle, session_string, pds_url)
 
         # Send the post
         response = client.send_post(text=message)

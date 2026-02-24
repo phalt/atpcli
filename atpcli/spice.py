@@ -60,10 +60,10 @@ def add(url: str, text: str):
     """
     # Load session
     config = Config()
-    handle, session_string = config.load_session()
+    handle, session_string, pds_url = config.load_session()
 
     if not session_string:
-        console.print("[red]✗ Not logged in. Please run 'atpcli bsky login' first.[/red]")
+        console.print("[red]✗ Not logged in. Please run 'atpcli login' first.[/red]")
         raise SystemExit(1)
 
     # Set createdAt to current UTC time in RFC 3339 format
@@ -93,7 +93,7 @@ def add(url: str, text: str):
         console.print(f"[blue]Creating note for {url}...[/blue]")
 
         # Create client with automatic session refresh
-        client = create_client_with_session_refresh(config, handle, session_string)
+        client = create_client_with_session_refresh(config, handle, session_string, pds_url)
 
         # Create the record using pydantic model
         record = note.to_record()
@@ -133,10 +133,10 @@ def list(url: str, limit: int, fetch_all: bool):
     """
     # Load session
     config = Config()
-    handle, session_string = config.load_session()
+    handle, session_string, pds_url = config.load_session()
 
     if not session_string:
-        console.print("[red]✗ Not logged in. Please run 'atpcli bsky login' first.[/red]")
+        console.print("[red]✗ Not logged in. Please run 'atpcli login' first.[/red]")
         raise SystemExit(1)
 
     try:
@@ -146,7 +146,7 @@ def list(url: str, limit: int, fetch_all: bool):
             console.print("[blue]Loading all notes...[/blue]")
 
         # Create client with automatic session refresh
-        client = create_client_with_session_refresh(config, handle, session_string)
+        client = create_client_with_session_refresh(config, handle, session_string, pds_url)
 
         # Collect all matching records
         all_matching_records = []
@@ -223,10 +223,10 @@ def delete(at_uri: str):
     """
     # Load session
     config = Config()
-    handle, session_string = config.load_session()
+    handle, session_string, pds_url = config.load_session()
 
     if not session_string:
-        console.print("[red]✗ Not logged in. Please run 'atpcli bsky login' first.[/red]")
+        console.print("[red]✗ Not logged in. Please run 'atpcli login' first.[/red]")
         raise SystemExit(1)
 
     # Parse and validate AT URI
@@ -248,7 +248,7 @@ def delete(at_uri: str):
         console.print(f"[blue]Deleting note {at_uri}...[/blue]")
 
         # Create client with automatic session refresh
-        client = create_client_with_session_refresh(config, handle, session_string)
+        client = create_client_with_session_refresh(config, handle, session_string, pds_url)
 
         # Delete the record
         client.com.atproto.repo.delete_record(

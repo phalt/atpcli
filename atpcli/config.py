@@ -4,6 +4,8 @@ import json
 from pathlib import Path
 from typing import Optional
 
+from atpcli.constants import DEFAULT_PDS_URL
+
 
 class Config:
     """Manage atpcli configuration and session state."""
@@ -16,18 +18,23 @@ class Config:
         self.config_file = self.config_dir / "config.json"
         self.config_dir.mkdir(parents=True, exist_ok=True)
 
-    def save_session(self, handle: str, session_string: str) -> None:
+    def save_session(self, handle: str, session_string: str, pds_url: str = DEFAULT_PDS_URL) -> None:
         """Save session information to config file."""
         config_data = self.load_config()
         config_data["handle"] = handle
         config_data["session"] = session_string
+        config_data["pds_url"] = pds_url
         with open(self.config_file, "w", encoding="utf-8") as f:
             json.dump(config_data, f, indent=2)
 
-    def load_session(self) -> tuple[Optional[str], Optional[str]]:
+    def load_session(self) -> tuple[Optional[str], Optional[str], Optional[str]]:
         """Load session information from config file."""
         config_data = self.load_config()
-        return config_data.get("handle"), config_data.get("session")
+        return (
+            config_data.get("handle"),
+            config_data.get("session"),
+            config_data.get("pds_url", DEFAULT_PDS_URL),
+        )
 
     def load_config(self) -> dict:
         """Load the entire config file."""
@@ -35,6 +42,11 @@ class Config:
             return {}
         with open(self.config_file, "r", encoding="utf-8") as f:
             return json.load(f)
+
+    def get_pds_url(self) -> str:
+        """Get the stored PDS URL, defaulting to Bluesky."""
+        config_data = self.load_config()
+        return config_data.get("pds_url", DEFAULT_PDS_URL)
 
     def clear_session(self) -> None:
         """Clear the saved session."""
