@@ -42,12 +42,18 @@ make install
 
 ### Login
 
-⚠️ **Security Note**: Use Bluesky app passwords, not your main password! See the [Quick Start Guide](docs/getting-started.md) for instructions on creating an app password.
+⚠️ **Security Note**: Use app passwords, not your main password! See the [Quick Start Guide](docs/getting-started.md) for instructions on creating an app password.
 
-Login to your Bluesky account and save the session:
+Login to an AT Protocol PDS (defaults to Bluesky):
 
 ```bash
-atpcli bsky login
+atpcli login
+```
+
+Or login to a custom PDS:
+
+```bash
+atpcli login https://my-pds.com
 ```
 
 You'll be prompted for your handle and password. The session will be saved to `~/.config/atpcli/config.json`.

@@ -1,24 +1,36 @@
 # 🔐 Login Command
 
-The `login` command authenticates you with Bluesky and saves your session for future use.
+The `login` command authenticates you with an AT Protocol PDS and saves your session for future use.
 
 ## Basic Usage
 
 ```bash
-atpcli bsky login
+atpcli login
 ```
 
-This will prompt you for your credentials interactively.
+This will connect to the default Bluesky PDS (`https://bsky.social`) and prompt for credentials.
+
+### Custom PDS
+
+To connect to a different AT Protocol PDS:
+
+```bash
+atpcli login https://my-pds.com
+```
 
 ## Command Options
 
 ```bash
-atpcli bsky login [OPTIONS]
+atpcli login [PDS_URL] [OPTIONS]
 ```
+
+### Arguments
+
+- `PDS_URL`: The AT Protocol PDS base URL (optional, defaults to `https://bsky.social`)
 
 ### Options
 
-- `--handle TEXT`: Your Bluesky handle (optional, will prompt if not provided)
+- `--handle TEXT`: Your AT Protocol handle (optional, will prompt if not provided)
 - `--password TEXT`: Your app password (optional, will prompt if not provided)
 - `--help`: Show help message
 
@@ -27,7 +39,7 @@ atpcli bsky login [OPTIONS]
 When you run the command without options, you'll be prompted:
 
 ```bash
-$ atpcli bsky login
+$ atpcli login
 Handle: alice.bsky.social
 Password: ****
 ✓ Successfully logged in as Alice
@@ -42,7 +54,13 @@ Session saved to /home/user/.config/atpcli/config.json
 You can provide credentials as command-line options:
 
 ```bash
-atpcli bsky login --handle alice.bsky.social --password your-app-password
+atpcli login --handle alice.bsky.social --password your-app-password
+```
+
+Or with a custom PDS:
+
+```bash
+atpcli login https://my-pds.com --handle alice.custom.social --password your-app-password
 ```
 
 !!! warning "Security Risk"
@@ -60,6 +78,7 @@ This file contains:
 
 - Your handle
 - Session authentication string
+- PDS URL
 
 The session persists across commands, so you only need to login once.
 
@@ -70,16 +89,17 @@ The config file is a simple JSON file:
 ```json
 {
   "handle": "alice.bsky.social",
-  "session": "eyJ...session-string...xyz"
+  "session": "eyJ...session-string...xyz",
+  "pds_url": "https://bsky.social"
 }
 ```
 
 ## Re-authentication
 
-To login with a different account, simply run `login` again:
+To login with a different account or PDS, simply run `login` again:
 
 ```bash
-atpcli bsky login
+atpcli login
 ```
 
 This will overwrite the previous session.
@@ -147,8 +167,18 @@ To revoke atpcli's access:
 ### First-time Login
 
 ```bash
-$ atpcli bsky login
+$ atpcli login
 Handle: alice.bsky.social
+Password: ****
+✓ Successfully logged in as Alice
+Session saved to /home/alice/.config/atpcli/config.json
+```
+
+### Login to Custom PDS
+
+```bash
+$ atpcli login https://my-pds.com
+Handle: alice.my-pds.com
 Password: ****
 ✓ Successfully logged in as Alice
 Session saved to /home/alice/.config/atpcli/config.json
@@ -157,7 +187,7 @@ Session saved to /home/alice/.config/atpcli/config.json
 ### Switching Accounts
 
 ```bash
-$ atpcli bsky login
+$ atpcli login
 Handle: bob.bsky.social
 Password: ****
 ✓ Successfully logged in as Bob
@@ -167,7 +197,7 @@ Session saved to /home/user/.config/atpcli/config.json
 ### Login with Command-line Options
 
 ```bash
-$ atpcli bsky login --handle alice.bsky.social --password xxxx-xxxx-xxxx-xxxx
+$ atpcli login --handle alice.bsky.social --password xxxx-xxxx-xxxx-xxxx
 ✓ Successfully logged in as Alice
 Session saved to /home/alice/.config/atpcli/config.json
 ```

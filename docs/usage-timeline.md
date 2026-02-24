@@ -104,7 +104,7 @@ Long posts are automatically wrapped to fit in the table for better readability.
 Before using the timeline command, you must be logged in:
 
 ```bash
-atpcli bsky login
+atpcli login
 ```
 
 ## Authentication Errors
@@ -115,10 +115,10 @@ If you haven't logged in yet:
 
 ```bash
 $ atpcli bsky timeline
-✗ Not logged in. Please run 'atpcli bsky login' first.
+✗ Not logged in. Please run 'atpcli login' first.
 ```
 
-**Solution**: Run `atpcli bsky login` first.
+**Solution**: Run `atpcli login` first.
 
 ### Session Expired
 
@@ -129,7 +129,7 @@ $ atpcli bsky timeline
 ✗ Failed to load timeline: ...
 ```
 
-**Solution**: Login again with `atpcli bsky login`.
+**Solution**: Login again with `atpcli login`.
 
 ## Session Management
 

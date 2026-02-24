@@ -102,10 +102,10 @@ Bluesky posts have a character limit of 300 characters (grapheme clusters). The 
 You must be logged in to post. If you're not logged in, you'll see:
 
 ```
-✗ Not logged in. Please run 'atpcli bsky login' first.
+✗ Not logged in. Please run 'atpcli login' first.
 ```
 
-Run `atpcli bsky login` to authenticate before posting.
+Run `atpcli login` to authenticate before posting.
 
 ## Success Output
 
