@@ -10,6 +10,7 @@ Full documentation is available at [docs/](docs/):
 - [Quick Start Guide](docs/getting-started.md) - Learn how to get app passwords and use atpcli
 - [Login Command](docs/usage-login.md)
 - [Timeline Command](docs/usage-timeline.md)
+- [Feeds Commands](docs/usage-feeds.md) - List and view custom Bluesky feeds
 - [Post Command](docs/usage-post.md)
 
 Or serve the docs locally:
@@ -85,6 +86,39 @@ atpcli bsky post --message 'Hello, Bluesky!'
 ```
 
 **Note:** When using special characters like `!`, use single quotes to avoid shell expansion issues. See the [Post Command documentation](docs/usage-post.md) for more details.
+
+### Custom Feeds
+
+List your saved Bluesky feeds:
+
+```bash
+atpcli bsky feeds
+```
+
+View posts from a specific feed:
+
+```bash
+atpcli bsky feed at://did:plc:xxx/app.bsky.feed.generator/discover
+```
+
+Options:
+- `--limit N` - Show N posts (default: 10)
+- `--p N` - Show page N (default: 1)
+- `--format uri` - Output only URIs (for `feeds` command)
+
+Example:
+```bash
+# List feeds in URI format for scripting
+atpcli bsky feeds --format uri
+
+# View a feed with more posts
+atpcli bsky feed at://did:plc:xxx/app.bsky.feed.generator/tech --limit 20
+
+# Navigate to page 2
+atpcli bsky feed at://did:plc:xxx/app.bsky.feed.generator/tech --p 2
+```
+
+See the [Feeds Commands documentation](docs/usage-feeds.md) for more details.
 
 ## Development
 
