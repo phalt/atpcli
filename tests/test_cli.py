@@ -312,3 +312,271 @@ def test_post_failure(mock_config_class, mock_create_client, runner):
     assert result.exit_code == 1
     assert "Failed to post" in result.output
     assert "Network error" in result.output
+
+
+def test_feeds_command_help(runner):
+    """Test feeds command help."""
+    result = runner.invoke(cli, ["bsky", "feeds", "--help"])
+    assert result.exit_code == 0
+    assert "List your saved feeds" in result.output
+
+
+def test_feed_command_help(runner):
+    """Test feed command help."""
+    result = runner.invoke(cli, ["bsky", "feed", "--help"])
+    assert result.exit_code == 0
+    assert "View posts from a specific feed" in result.output
+
+
+@patch("atpcli.cli.create_client_with_session_refresh")
+@patch("atpcli.cli.Config")
+def test_feeds_not_logged_in(mock_config_class, mock_create_client, runner):
+    """Test feeds when not logged in."""
+    mock_config = MagicMock()
+    mock_config.load_session.return_value = (None, None, "https://bsky.social")
+    mock_config_class.return_value = mock_config
+
+    result = runner.invoke(cli, ["bsky", "feeds"])
+
+    assert result.exit_code == 1
+    assert "Not logged in" in result.output
+
+
+@patch("atpcli.cli.create_client_with_session_refresh")
+@patch("atpcli.cli.Config")
+def test_feeds_success_table_format(mock_config_class, mock_create_client, runner):
+    """Test successful feeds fetch with table format."""
+    # Setup mocks
+    mock_client = MagicMock()
+    mock_create_client.return_value = mock_client
+
+    # Mock saved feeds preference
+    mock_pref = MagicMock()
+    mock_pref.py_type = "app.bsky.actor.defs#savedFeedsPref"
+    mock_pref.saved = ["at://did:plc:test/app.bsky.feed.generator/discover"]
+
+    mock_preferences = MagicMock()
+    mock_preferences.preferences = [mock_pref]
+    mock_client.app.bsky.actor.get_preferences.return_value = mock_preferences
+
+    # Mock feed generator info
+    mock_feed_view = MagicMock()
+    mock_feed_view.display_name = "Discover Feed"
+    mock_feed_view.description = "Discover new content"
+
+    mock_feed_info = MagicMock()
+    mock_feed_info.view = mock_feed_view
+    mock_client.app.bsky.feed.get_feed_generator.return_value = mock_feed_info
+
+    # Mock config
+    mock_config = MagicMock()
+    mock_config.load_session.return_value = ("test.bsky.social", "test_session", "https://bsky.social")
+    mock_config_class.return_value = mock_config
+
+    # Run feeds
+    result = runner.invoke(cli, ["bsky", "feeds"])
+
+    # Verify
+    assert result.exit_code == 0
+    assert "Loading saved feeds for test.bsky.social" in result.output
+    assert "Discover Feed" in result.output
+    assert "Saved Feeds (1)" in result.output
+    mock_create_client.assert_called_once_with(mock_config, "test.bsky.social", "test_session", "https://bsky.social")
+    mock_client.app.bsky.actor.get_preferences.assert_called_once()
+
+
+@patch("atpcli.cli.create_client_with_session_refresh")
+@patch("atpcli.cli.Config")
+def test_feeds_success_uri_format(mock_config_class, mock_create_client, runner):
+    """Test successful feeds fetch with URI format."""
+    # Setup mocks
+    mock_client = MagicMock()
+    mock_create_client.return_value = mock_client
+
+    # Mock saved feeds preference
+    mock_pref = MagicMock()
+    mock_pref.py_type = "app.bsky.actor.defs#savedFeedsPref"
+    mock_pref.saved = [
+        "at://did:plc:test/app.bsky.feed.generator/discover",
+        "at://did:plc:test/app.bsky.feed.generator/popular",
+    ]
+
+    mock_preferences = MagicMock()
+    mock_preferences.preferences = [mock_pref]
+    mock_client.app.bsky.actor.get_preferences.return_value = mock_preferences
+
+    # Mock config
+    mock_config = MagicMock()
+    mock_config.load_session.return_value = ("test.bsky.social", "test_session", "https://bsky.social")
+    mock_config_class.return_value = mock_config
+
+    # Run feeds with URI format
+    result = runner.invoke(cli, ["bsky", "feeds", "--format", "uri"])
+
+    # Verify
+    assert result.exit_code == 0
+    assert "at://did:plc:test/app.bsky.feed.generator/discover" in result.output
+    assert "at://did:plc:test/app.bsky.feed.generator/popular" in result.output
+    # Should not call get_feed_generator for URI format
+    mock_client.app.bsky.feed.get_feed_generator.assert_not_called()
+
+
+@patch("atpcli.cli.create_client_with_session_refresh")
+@patch("atpcli.cli.Config")
+def test_feeds_empty(mock_config_class, mock_create_client, runner):
+    """Test feeds when no saved feeds exist."""
+    # Setup mocks
+    mock_client = MagicMock()
+    mock_create_client.return_value = mock_client
+
+    # Mock empty preferences
+    mock_preferences = MagicMock()
+    mock_preferences.preferences = []
+    mock_client.app.bsky.actor.get_preferences.return_value = mock_preferences
+
+    # Mock config
+    mock_config = MagicMock()
+    mock_config.load_session.return_value = ("test.bsky.social", "test_session", "https://bsky.social")
+    mock_config_class.return_value = mock_config
+
+    # Run feeds
+    result = runner.invoke(cli, ["bsky", "feeds"])
+
+    # Verify
+    assert result.exit_code == 0
+    assert "No saved feeds found" in result.output
+
+
+@patch("atpcli.cli.create_client_with_session_refresh")
+@patch("atpcli.cli.Config")
+def test_feed_not_logged_in(mock_config_class, mock_create_client, runner):
+    """Test feed when not logged in."""
+    mock_config = MagicMock()
+    mock_config.load_session.return_value = (None, None, "https://bsky.social")
+    mock_config_class.return_value = mock_config
+
+    result = runner.invoke(cli, ["bsky", "feed", "at://did:plc:test/app.bsky.feed.generator/discover"])
+
+    assert result.exit_code == 1
+    assert "Not logged in" in result.output
+
+
+@patch("atpcli.cli.create_client_with_session_refresh")
+@patch("atpcli.cli.Config")
+def test_feed_success(mock_config_class, mock_create_client, runner):
+    """Test successful feed fetch."""
+    # Setup mocks
+    mock_client = MagicMock()
+    mock_create_client.return_value = mock_client
+
+    # Mock feed response
+    mock_post = MagicMock()
+    mock_post.author.display_name = "Test Author"
+    mock_post.author.handle = "test.bsky.social"
+    mock_post.record.text = "Test post from feed"
+    mock_post.like_count = 7
+    mock_post.uri = "at://did:plc:test123/app.bsky.feed.post/xyz123"
+
+    mock_feed_view = MagicMock()
+    mock_feed_view.post = mock_post
+
+    mock_feed_response = MagicMock()
+    mock_feed_response.feed = [mock_feed_view]
+    mock_feed_response.cursor = None
+    mock_client.app.bsky.feed.get_feed.return_value = mock_feed_response
+
+    # Mock config
+    mock_config = MagicMock()
+    mock_config.load_session.return_value = ("test.bsky.social", "test_session", "https://bsky.social")
+    mock_config_class.return_value = mock_config
+
+    # Run feed
+    feed_uri = "at://did:plc:test/app.bsky.feed.generator/discover"
+    result = runner.invoke(cli, ["bsky", "feed", feed_uri, "--limit", "10"])
+
+    # Verify
+    assert result.exit_code == 0
+    assert f"Loading feed {feed_uri}" in result.output
+    assert "Test Author" in result.output
+    assert "Test post from feed" in result.output
+    assert "Showing 1 posts" in result.output
+    mock_create_client.assert_called_once_with(mock_config, "test.bsky.social", "test_session", "https://bsky.social")
+    mock_client.app.bsky.feed.get_feed.assert_called_once()
+
+
+@patch("atpcli.cli.create_client_with_session_refresh")
+@patch("atpcli.cli.Config")
+def test_feed_with_pagination(mock_config_class, mock_create_client, runner):
+    """Test feed with pagination."""
+    # Setup mocks
+    mock_client = MagicMock()
+    mock_create_client.return_value = mock_client
+
+    # Mock feed response for page 1
+    mock_feed_page1 = MagicMock()
+    mock_feed_page1.feed = []
+    mock_feed_page1.cursor = "cursor_page_2"
+
+    # Mock feed response for page 2
+    mock_post = MagicMock()
+    mock_post.author.display_name = "Test Author"
+    mock_post.author.handle = "test.bsky.social"
+    mock_post.record.text = "Test post on page 2"
+    mock_post.like_count = 5
+    mock_post.uri = "at://did:plc:test123/app.bsky.feed.post/abc789"
+
+    mock_feed_view = MagicMock()
+    mock_feed_view.post = mock_post
+
+    mock_feed_page2 = MagicMock()
+    mock_feed_page2.feed = [mock_feed_view]
+    mock_feed_page2.cursor = "cursor_page_3"
+
+    # Mock get_feed to return different responses
+    mock_client.app.bsky.feed.get_feed.side_effect = [mock_feed_page1, mock_feed_page2]
+
+    # Mock config
+    mock_config = MagicMock()
+    mock_config.load_session.return_value = ("test.bsky.social", "test_session", "https://bsky.social")
+    mock_config_class.return_value = mock_config
+
+    # Run feed with page 2
+    feed_uri = "at://did:plc:test/app.bsky.feed.generator/discover"
+    result = runner.invoke(cli, ["bsky", "feed", feed_uri, "--limit", "5", "--p", "2"])
+
+    # Verify
+    assert result.exit_code == 0
+    assert "Test post on page 2" in result.output
+    assert "page 2" in result.output
+    assert "--p 3" in result.output  # Should show next page hint
+    mock_create_client.assert_called_once_with(mock_config, "test.bsky.social", "test_session", "https://bsky.social")
+    # Should be called twice: once to skip page 1, once to get page 2
+    assert mock_client.app.bsky.feed.get_feed.call_count == 2
+
+
+@patch("atpcli.cli.create_client_with_session_refresh")
+@patch("atpcli.cli.Config")
+def test_feed_empty(mock_config_class, mock_create_client, runner):
+    """Test feed with no posts."""
+    # Setup mocks
+    mock_client = MagicMock()
+    mock_create_client.return_value = mock_client
+
+    # Mock empty feed response
+    mock_feed_response = MagicMock()
+    mock_feed_response.feed = []
+    mock_feed_response.cursor = None
+    mock_client.app.bsky.feed.get_feed.return_value = mock_feed_response
+
+    # Mock config
+    mock_config = MagicMock()
+    mock_config.load_session.return_value = ("test.bsky.social", "test_session", "https://bsky.social")
+    mock_config_class.return_value = mock_config
+
+    # Run feed
+    feed_uri = "at://did:plc:test/app.bsky.feed.generator/discover"
+    result = runner.invoke(cli, ["bsky", "feed", feed_uri])
+
+    # Verify
+    assert result.exit_code == 0
+    assert "This feed has no posts" in result.output
