@@ -159,7 +159,7 @@ def test_timeline_success(mock_config_class, mock_create_client, runner):
     assert "Loading timeline for test.bsky.social" in result.output
     assert "Test Author" in result.output
     assert "Test post" in result.output
-    assert "Showing 1 posts" in result.output
+    assert "Showing 1 post" in result.output
     mock_create_client.assert_called_once_with(mock_config, "test.bsky.social", "test_session", "https://bsky.social")
     mock_client.get_timeline.assert_called_once_with(limit=10, cursor=None)
 
@@ -499,7 +499,7 @@ def test_feed_success(mock_config_class, mock_create_client, runner):
     assert f"Loading feed {feed_uri}" in result.output
     assert "Test Author" in result.output
     assert "Test post from feed" in result.output
-    assert "Showing 1 posts" in result.output
+    assert "Showing 1 post" in result.output
     mock_create_client.assert_called_once_with(mock_config, "test.bsky.social", "test_session", "https://bsky.social")
     mock_client.app.bsky.feed.get_feed.assert_called_once()
 

@@ -124,7 +124,9 @@ def timeline(limit: int, page: int):
             console.print(table)
 
         # Show pagination info
-        page_info = f"[dim]Showing {len(timeline_response.feed)} posts (page {page})"
+        post_count = len(timeline_response.feed)
+        post_word = "post" if post_count == 1 else "posts"
+        page_info = f"[dim]Showing {post_count} {post_word} (page {page})"
         if timeline_response.cursor:
             page_info += f" - Use --p {page + 1} for next page"
         page_info += "[/dim]"
@@ -291,7 +293,9 @@ def feed(feed_uri: str, limit: int, page: int):
             console.print(table)
 
         # Show pagination info (same as timeline)
-        page_info = f"[dim]Showing {len(feed_response.feed)} posts (page {page})"
+        post_count = len(feed_response.feed)
+        post_word = "post" if post_count == 1 else "posts"
+        page_info = f"[dim]Showing {post_count} {post_word} (page {page})"
         if feed_response.cursor:
             page_info += f" - Use --p {page + 1} for next page"
         page_info += "[/dim]"
