@@ -6,7 +6,7 @@ authors = [{ name = "Paul Hallett", email = "paulandrewhallett@gmail.com" }]
 license = { text = "MIT" }
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = ["atproto>=0.0.55", "click>=8.1.7", "rich>=13.7.0"]
+dependencies = ["atproto>=0.0.65", "click>=8.1.7", "rich>=13.7.0"]
 
 [project.urls]
 Homepage = "https://github.com/phalt/atpcli"
