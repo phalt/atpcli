@@ -419,7 +419,8 @@ def posts(handle: str, limit: int, page: int, me: bool):
         # Pagination logic (SAME as timeline)
         cursor = None
         if page > 5:
-            console.print(f"[yellow]⚠ Loading page {page} requires {page} API calls. This may take a moment...[/yellow]")
+            warning_msg = f"[yellow]⚠ Loading page {page} requires {page} API calls. This may take a moment...[/yellow]"
+            console.print(warning_msg)
 
         for i in range(1, page):
             response = client.get_author_feed(actor=handle, limit=limit, cursor=cursor)

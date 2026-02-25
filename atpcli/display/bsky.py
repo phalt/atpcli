@@ -322,7 +322,7 @@ def display_post(post: PostView, client=None) -> Table:
         title = f"📷 {title}"
 
     clickable_title = f"[link={web_url}]{title}[/link]"
-    
+
     # Add DID on a separate line (not part of the link)
     full_title = f"{clickable_title}\n[dim]{post.author.did}[/dim]"
 
