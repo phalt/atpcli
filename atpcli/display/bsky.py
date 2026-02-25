@@ -309,7 +309,7 @@ def display_post(post: PostView, client=None) -> Table:
     # Convert AT URI to web URL
     web_url = _at_uri_to_web_url(post.uri, post.author.handle)
 
-    # Create clickable title
+    # Create clickable title (WITHOUT DID)
     title = f"{post.author.display_name} (@{post.author.handle})"
 
     # Add appropriate emoji indicator
@@ -322,8 +322,11 @@ def display_post(post: PostView, client=None) -> Table:
         title = f"📷 {title}"
 
     clickable_title = f"[link={web_url}]{title}[/link]"
+    
+    # Add DID on a separate line (not part of the link)
+    full_title = f"{clickable_title}\n[dim]{post.author.did}[/dim]"
 
-    table = Table(title=clickable_title, show_header=True, expand=True)
+    table = Table(title=full_title, show_header=True, expand=True)
     # Use overflow="fold" to wrap text instead of truncating with ellipsis
     table.add_column("Post", style="white", overflow="fold")
     table.add_column("Likes", justify="right", style="green", overflow="fold")
@@ -364,6 +367,56 @@ def display_feeds(feed_details: List[dict]) -> Table:
         table.add_row(feed["name"], feed["uri"], feed["description"])
 
     return table
+
+
+def display_profile(profile) -> None:
+    """Display a user profile in the terminal.
+
+    Args:
+        profile: Profile object from atproto
+    """
+    from rich.console import Console
+    from rich.panel import Panel
+    from rich.text import Text
+
+    console = Console()
+
+    # Title with name and handle
+    title = f"{profile.display_name or profile.handle} (@{profile.handle})"
+
+    # Build content
+    content = Text()
+
+    # DID (for copy/paste)
+    content.append("DID: ", style="dim")
+    content.append(f"{profile.did}\n\n", style="dim cyan")
+
+    # Bio/Description
+    if profile.description:
+        content.append("Bio: ", style="bold")
+        content.append(f"{profile.description}\n\n")
+
+    # Stats
+    content.append("📊 Stats\n", style="bold cyan")
+    content.append(f"  • {profile.followers_count or 0:,} followers\n")
+    content.append(f"  • {profile.follows_count or 0:,} following\n")
+    content.append(f"  • {profile.posts_count or 0:,} posts\n\n")
+
+    # Links
+    content.append("🔗 Links\n", style="bold cyan")
+    profile_url = f"https://bsky.app/profile/{profile.handle}"
+    content.append("  Profile: ")
+    content.append(profile_url, style="link " + profile_url)
+    content.append("\n")
+
+    if profile.avatar:
+        content.append("  Avatar:  ")
+        content.append(profile.avatar, style="dim")
+        content.append("\n")
+
+    # Create panel
+    panel = Panel(content, title=title, border_style="blue")
+    console.print(panel)
 
 
 def get_profile_display(client, did: str, profile_cache: dict) -> str:

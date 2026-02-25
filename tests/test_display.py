@@ -116,6 +116,7 @@ def test_display_post():
     mock_post = MagicMock()
     mock_post.author.display_name = "Test User"
     mock_post.author.handle = "test.bsky.social"
+    mock_post.author.did = "did:plc:test123abc"
     mock_post.record.text = "This is a test post with https://example.com"
     mock_post.record.reply = None
     mock_post.like_count = 10
@@ -132,6 +133,10 @@ def test_display_post():
     # Verify the link markup format
     assert f"[link={expected_url}]" in table.title
     assert "[/link]" in table.title
+    # Verify DID appears in title
+    assert "did:plc:test123abc" in table.title
+    # Verify DID has dim styling
+    assert "[dim]did:plc:test123abc[/dim]" in table.title
 
 
 def test_display_post_renders_content_links():
@@ -139,6 +144,7 @@ def test_display_post_renders_content_links():
     mock_post = MagicMock()
     mock_post.author.display_name = "Test User"
     mock_post.author.handle = "test.bsky.social"
+    mock_post.author.did = "did:plc:test456xyz"
     mock_post.record.text = "Check out https://example.com"
     mock_post.record.reply = None
     mock_post.like_count = 5
@@ -155,6 +161,27 @@ def test_display_post_renders_content_links():
     rendered = _render_text_with_links("Check out https://example.com")
     assert isinstance(rendered, Text)
     assert "https://example.com" in str(rendered)
+
+
+def test_display_post_includes_did():
+    """Test that display_post always shows DID."""
+    mock_post = MagicMock()
+    mock_post.author.display_name = "Test User"
+    mock_post.author.handle = "test.bsky.social"
+    mock_post.author.did = "did:plc:test123abc"
+    mock_post.record.text = "Test post"
+    mock_post.like_count = 5
+    mock_post.uri = "at://did:plc:test123/app.bsky.feed.post/abc123"
+    mock_post.embed = None
+    mock_post.record.facets = None
+    mock_post.record.reply = None
+
+    table = display_post(mock_post)
+
+    # Verify DID appears in title
+    assert "did:plc:test123abc" in table.title
+    # Verify DID has dim styling
+    assert "[dim]did:plc:test123abc[/dim]" in table.title
 
 
 def test_has_image_no_embed():
@@ -417,7 +444,7 @@ def test_display_post_with_record_with_media():
 
 def test_is_reply():
     """Test _is_reply function."""
-    from atpcli.display import _is_reply
+    from atpcli.display.bsky import _is_reply
 
     # Test with reply
     mock_post = MagicMock()
@@ -433,7 +460,7 @@ def test_is_repost_or_quote():
     """Test _is_repost_or_quote function."""
     from atproto_client.models.app.bsky.embed.record import View as RecordView
 
-    from atpcli.display import _is_repost_or_quote
+    from atpcli.display.bsky import _is_repost_or_quote
 
     # Test with record embed
     mock_post = MagicMock()
@@ -497,3 +524,28 @@ def test_display_feeds_empty():
 
     # Table should have 3 columns even if empty
     assert len(table.columns) == 3
+
+
+def test_display_profile():
+    """Test displaying a user profile."""
+    from atpcli.display.bsky import display_profile
+
+    # Create a mock profile
+    mock_profile = MagicMock()
+    mock_profile.display_name = "Alice Test"
+    mock_profile.handle = "alice.bsky.social"
+    mock_profile.did = "did:plc:abc123xyz789"
+    mock_profile.description = "Python developer and open source enthusiast"
+    mock_profile.followers_count = 1234
+    mock_profile.follows_count = 567
+    mock_profile.posts_count = 890
+    mock_profile.avatar = "https://cdn.bsky.app/avatar/test.jpg"
+
+    # Call display_profile and verify it doesn't crash
+    try:
+        display_profile(mock_profile)
+        # If we get here without exception, the function works
+        assert True
+    except Exception as e:
+        assert False, f"display_profile raised exception: {e}"
+
