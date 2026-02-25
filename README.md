@@ -79,13 +79,19 @@ atpcli bsky timeline --p 2
 
 ### Post Messages
 
-Create a post on Bluesky:
+Create a post on Bluesky using the interactive editor:
+
+```bash
+atpcli bsky post
+```
+
+Or post directly with a message:
 
 ```bash
 atpcli bsky post --message 'Hello, Bluesky!'
 ```
 
-**Note:** When using special characters like `!`, use single quotes to avoid shell expansion issues. See the [Post Command documentation](docs/usage-post.md) for more details.
+**Note:** When using special characters like `!`, use single quotes to avoid shell expansion issues, or use the interactive editor mode. See the [Post Command documentation](docs/usage-post.md) for more details.
 
 ### Custom Feeds
 
