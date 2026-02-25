@@ -77,6 +77,39 @@ atpcli bsky timeline --limit 20
 atpcli bsky timeline --p 2
 ```
 
+### View User Profiles
+
+View any user's profile:
+
+```bash
+atpcli bsky profile @alice.bsky.social
+```
+
+View your own profile:
+
+```bash
+atpcli bsky profile --me
+```
+
+### View User Posts
+
+View posts from a specific user:
+
+```bash
+atpcli bsky posts @alice.bsky.social
+```
+
+Options:
+- `--limit N` - Show N posts (default: 10)
+- `--p N` - Show page N (default: 1)
+- `--me` - View your own posts
+
+Example:
+```bash
+atpcli bsky posts @alice.bsky.social --limit 20
+atpcli bsky posts --me
+```
+
 ### Post Messages
 
 Create a post on Bluesky using the interactive editor:
