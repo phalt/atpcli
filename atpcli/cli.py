@@ -1,5 +1,8 @@
 """CLI commands for atpcli."""
 
+import os
+import subprocess
+import tempfile
 import textwrap
 
 import click
@@ -136,8 +139,62 @@ def timeline(limit: int, page: int):
         raise SystemExit(1)
 
 
+def get_message_from_editor():
+    """Open an editor for the user to compose a message."""
+    # Determine which editor to use
+    editor = os.environ.get("EDITOR")
+    if not editor:
+        # Try to find vim or vi
+        for candidate in ["vim", "vi"]:
+            try:
+                subprocess.run([candidate, "--version"], capture_output=True, check=True)
+                editor = candidate
+                break
+            except (subprocess.CalledProcessError, FileNotFoundError):
+                continue
+
+    if not editor:
+        console.print("[red]✗ No editor found. Please set the EDITOR environment variable or install vim/vi.[/red]")
+        raise SystemExit(1)
+
+    # Create a temporary file
+    with tempfile.NamedTemporaryFile(mode="w+", suffix=".txt", delete=False) as tf:
+        temp_file = tf.name
+        # Add a comment to help the user
+        tf.write("\n# Enter your message above this line. Lines starting with # will be ignored.\n")
+        tf.write("# Save and exit the editor to post your message.\n")
+
+    try:
+        # Open the editor
+        subprocess.run([editor, temp_file], check=True)
+
+        # Read the content
+        with open(temp_file, "r") as f:
+            lines = f.readlines()
+
+        # Filter out comment lines and empty lines at the end
+        message_lines = []
+        for line in lines:
+            if not line.startswith("#"):
+                message_lines.append(line)
+
+        message = "".join(message_lines).strip()
+
+        if not message:
+            console.print("[yellow]⚠ Empty message. Post cancelled.[/yellow]")
+            raise SystemExit(0)
+
+        return message
+    finally:
+        # Clean up the temporary file
+        try:
+            os.unlink(temp_file)
+        except OSError:
+            pass
+
+
 @bsky.command()
-@click.option("--message", "-m", required=True, help="Message to post")
+@click.option("--message", "-m", required=False, help="Message to post (if not provided, opens editor)")
 def post(message: str):
     """Post a message to Bluesky."""
     config = Config()
@@ -146,6 +203,10 @@ def post(message: str):
     if not session_string:
         console.print("[red]✗ Not logged in. Please run 'atpcli login' first.[/red]")
         raise SystemExit(1)
+
+    # If no message provided, open editor
+    if not message:
+        message = get_message_from_editor()
 
     try:
         console.print(f"[blue]Posting as {handle}...[/blue]")
