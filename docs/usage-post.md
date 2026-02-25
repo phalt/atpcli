@@ -4,6 +4,18 @@ The `post` command allows you to create new posts on Bluesky directly from the c
 
 ## Basic Usage
 
+### Using the Editor (Interactive Mode)
+
+Simply run the post command without any arguments to open your editor:
+
+```bash
+atpcli bsky post
+```
+
+This will open your default editor (from the `EDITOR` environment variable, or `vim`/`vi` if available) where you can compose your message. Lines starting with `#` are treated as comments and will be ignored. Save and exit to post, or save an empty file to cancel.
+
+### Using the -m Flag (Direct Mode)
+
 ```bash
 atpcli bsky post --message "Your message here"
 ```
@@ -18,9 +30,23 @@ The command will post your message to Bluesky and return a link to the created p
 
 ## Command Options
 
-- `--message TEXT` / `-m TEXT` - The text content of your post (required)
+- `--message TEXT` / `-m TEXT` - The text content of your post (optional - if not provided, opens editor)
 
 ## Examples
+
+### Interactive Editor Mode
+
+For composing longer messages or messages with special formatting, use the interactive editor:
+
+```bash
+atpcli bsky post
+```
+
+This opens your editor with helpful comments:
+- Write your message at the top
+- Lines starting with `#` are ignored (comments)
+- Save and exit to post
+- Save an empty file (or only comments) to cancel
 
 ### Simple Post
 
@@ -91,6 +117,29 @@ Other characters that may need escaping in double quotes:
 ```bash
 # Single quotes prevent shell interpretation of special characters
 atpcli bsky post --message 'My message with special characters: $ ! @ #'
+```
+
+**Alternative:** Use the interactive editor mode to avoid shell escaping issues entirely:
+```bash
+atpcli bsky post
+# Your editor opens - type your message freely without worrying about shell escaping
+```
+
+## Configuring Your Editor
+
+By default, the command will use your editor in this order of preference:
+
+1. The `EDITOR` environment variable
+2. `vim` (if available)
+3. `vi` (if available)
+
+To set your preferred editor permanently, add this to your shell configuration file (`.bashrc`, `.zshrc`, etc.):
+
+```bash
+export EDITOR=nano      # Use nano
+export EDITOR=emacs     # Use emacs
+export EDITOR=code -w   # Use VS Code (wait for window to close)
+export EDITOR=vim       # Use vim (default if available)
 ```
 
 ## Character Limits

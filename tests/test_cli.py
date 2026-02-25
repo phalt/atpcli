@@ -314,6 +314,59 @@ def test_post_failure(mock_config_class, mock_create_client, runner):
     assert "Network error" in result.output
 
 
+@patch("atpcli.cli.get_message_from_editor")
+@patch("atpcli.cli.create_client_with_session_refresh")
+@patch("atpcli.cli.Config")
+def test_post_with_editor(mock_config_class, mock_create_client, mock_get_message, runner):
+    """Test post using editor when -m is not provided."""
+    # Setup mocks
+    mock_client = MagicMock()
+    mock_create_client.return_value = mock_client
+
+    # Mock editor returning a message
+    mock_get_message.return_value = "Message from editor"
+
+    # Mock post response
+    mock_response = MagicMock()
+    mock_response.uri = "at://did:plc:test123/app.bsky.feed.post/abc123xyz"
+    mock_client.send_post.return_value = mock_response
+
+    # Mock config
+    mock_config = MagicMock()
+    mock_config.load_session.return_value = ("test.bsky.social", "test_session", "https://bsky.social")
+    mock_config_class.return_value = mock_config
+
+    # Run post without -m option
+    result = runner.invoke(cli, ["bsky", "post"])
+
+    # Verify
+    assert result.exit_code == 0
+    assert "Post created successfully" in result.output
+    mock_get_message.assert_called_once()
+    mock_client.send_post.assert_called_once_with(text="Message from editor")
+
+
+@patch("atpcli.cli.get_message_from_editor")
+@patch("atpcli.cli.create_client_with_session_refresh")
+@patch("atpcli.cli.Config")
+def test_post_editor_empty_message(mock_config_class, mock_create_client, mock_get_message, runner):
+    """Test post with editor when user provides empty message."""
+    # Mock config
+    mock_config = MagicMock()
+    mock_config.load_session.return_value = ("test.bsky.social", "test_session", "https://bsky.social")
+    mock_config_class.return_value = mock_config
+
+    # Mock editor returning empty message (which causes SystemExit(0))
+    mock_get_message.side_effect = SystemExit(0)
+
+    # Run post without -m option
+    result = runner.invoke(cli, ["bsky", "post"])
+
+    # Verify - SystemExit(0) is caught by click and results in exit code 0
+    assert result.exit_code == 0
+    mock_get_message.assert_called_once()
+
+
 def test_feeds_command_help(runner):
     """Test feeds command help."""
     result = runner.invoke(cli, ["bsky", "feeds", "--help"])
