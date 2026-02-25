@@ -11,7 +11,7 @@ from rich.console import Console
 
 from atpcli.config import Config
 from atpcli.constants import DEFAULT_PDS_URL
-from atpcli.display.bsky import display_feeds, display_post
+from atpcli.display.bsky import display_feeds, display_post, display_profile
 from atpcli.session import create_client_with_session_refresh
 from atpcli.spice import spice
 
@@ -356,6 +356,104 @@ def feed(feed_uri: str, limit: int, page: int):
 
     except Exception as e:
         console.print(f"[red]✗ Failed to load feed: {e}[/red]")
+        raise SystemExit(1)
+
+
+@bsky.command()
+@click.argument("handle", required=False)
+@click.option("--me", is_flag=True, help="View your own profile")
+def profile(handle: str, me: bool):
+    """View a user's profile."""
+    config = Config()
+    session_handle, session_string, pds_url = config.load_session()
+
+    if not session_string:
+        console.print("[red]✗ Not logged in. Please run 'atpcli login' first.[/red]")
+        raise SystemExit(1)
+
+    if me:
+        handle = session_handle
+    elif not handle:
+        console.print("[red]✗ Please provide a handle or use --me[/red]")
+        raise SystemExit(1)
+
+    try:
+        client = create_client_with_session_refresh(config, session_handle, session_string, pds_url)
+
+        # Get profile
+        profile_data = client.get_profile(handle)
+
+        # Display using Rich formatting
+        display_profile(profile_data)
+
+    except Exception as e:
+        console.print(f"[red]✗ Failed to load profile: {e}[/red]")
+        raise SystemExit(1)
+
+
+@bsky.command()
+@click.argument("handle", required=False)
+@click.option("--limit", default=10, help="Number of posts to show")
+@click.option("--p", "page", default=1, help="Page number to load")
+@click.option("--me", is_flag=True, help="View your own posts")
+def posts(handle: str, limit: int, page: int, me: bool):
+    """View posts from a specific user."""
+    config = Config()
+    session_handle, session_string, pds_url = config.load_session()
+
+    if not session_string:
+        console.print("[red]✗ Not logged in. Please run 'atpcli login' first.[/red]")
+        raise SystemExit(1)
+
+    if me:
+        handle = session_handle
+    elif not handle:
+        console.print("[red]✗ Please provide a handle or use --me[/red]")
+        raise SystemExit(1)
+
+    try:
+        console.print(f"[blue]Loading posts from {handle}...[/blue]")
+
+        client = create_client_with_session_refresh(config, session_handle, session_string, pds_url)
+
+        # Pagination logic (SAME as timeline)
+        cursor = None
+        if page > 5:
+            warning_msg = f"[yellow]⚠ Loading page {page} requires {page} API calls. This may take a moment...[/yellow]"
+            console.print(warning_msg)
+
+        for i in range(1, page):
+            response = client.get_author_feed(actor=handle, limit=limit, cursor=cursor)
+            cursor = response.cursor
+            if not cursor:
+                console.print(f"[yellow]⚠ Page {page} does not exist. Showing last available page (page {i}).[/yellow]")
+                page = i
+                break
+
+        # Get the requested page
+        feed_response = client.get_author_feed(actor=handle, limit=limit, cursor=cursor)
+
+        # Reverse feed (SAME as timeline)
+        reversed_feed = list(reversed(feed_response.feed))
+
+        # Display posts (SAME as timeline - reuse display_post!)
+        # DIDs are automatically shown because display_post() includes them
+        for feed_view in reversed_feed:
+            post = feed_view.post
+            table = display_post(post, client)
+            console.print(table)
+
+        # Pagination info (SAME as timeline)
+        post_count = len(feed_response.feed)
+        post_word = "post" if post_count == 1 else "posts"
+        page_info = f"[dim]Showing {post_count} {post_word} (page {page})"
+        if feed_response.cursor:
+            page_info += f" - Use --p {page + 1} for next page"
+        page_info += "[/dim]"
+        console.print(f"\n{page_info}")
+
+    except Exception as e:
+        console.print(f"[red]✗ Failed to load posts: {e}[/red]")
         raise SystemExit(1)
 
 

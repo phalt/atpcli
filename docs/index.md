@@ -10,6 +10,9 @@ atpcli is a minimal command-line interface for interacting with [Bluesky](https:
 
 - **🔐 Secure Login** - Uses Bluesky app passwords for safe authentication
 - **📱 Timeline Viewing** - Browse your Bluesky timeline directly from the terminal
+- **👤 User Profiles** - View any user's profile with stats and bio
+- **📝 Author Feeds** - Browse posts from specific users
+- **🆔 DID Display** - Always see user DIDs for easy copy/paste
 - **📡 Custom Feeds** - List and view custom Bluesky feeds with saved feeds support
 - **✍️ Post Messages** - Create posts on Bluesky from the command line
 - **💾 Session Persistence** - Login once, stay authenticated across commands
@@ -24,6 +27,12 @@ atpcli login
 
 # View your timeline
 atpcli bsky timeline --limit 10
+
+# View a user's profile
+atpcli bsky profile @alice.bsky.social
+
+# View a user's posts
+atpcli bsky posts @alice.bsky.social
 
 # List your saved feeds
 atpcli bsky feeds

@@ -633,3 +633,281 @@ def test_feed_empty(mock_config_class, mock_create_client, runner):
     # Verify
     assert result.exit_code == 0
     assert "This feed has no posts" in result.output
+
+
+@patch("atpcli.cli.create_client_with_session_refresh")
+@patch("atpcli.cli.Config")
+def test_profile_not_logged_in(mock_config_class, mock_create_client, runner):
+    """Test profile when not logged in."""
+    mock_config = MagicMock()
+    mock_config.load_session.return_value = (None, None, "https://bsky.social")
+    mock_config_class.return_value = mock_config
+
+    result = runner.invoke(cli, ["bsky", "profile", "@alice.bsky.social"])
+
+    assert result.exit_code == 1
+    assert "Not logged in" in result.output
+
+
+@patch("atpcli.cli.create_client_with_session_refresh")
+@patch("atpcli.cli.Config")
+def test_profile_success(mock_config_class, mock_create_client, runner):
+    """Test successful profile fetch."""
+    # Setup mocks
+    mock_client = MagicMock()
+    mock_create_client.return_value = mock_client
+
+    # Mock profile response
+    mock_profile = MagicMock()
+    mock_profile.display_name = "Alice Test"
+    mock_profile.handle = "alice.bsky.social"
+    mock_profile.did = "did:plc:abc123xyz789"
+    mock_profile.description = "Python developer"
+    mock_profile.followers_count = 1234
+    mock_profile.follows_count = 567
+    mock_profile.posts_count = 890
+    mock_profile.avatar = "https://cdn.bsky.app/avatar/test.jpg"
+    mock_client.get_profile.return_value = mock_profile
+
+    # Mock config
+    mock_config = MagicMock()
+    mock_config.load_session.return_value = ("test.bsky.social", "test_session", "https://bsky.social")
+    mock_config_class.return_value = mock_config
+
+    # Run profile
+    result = runner.invoke(cli, ["bsky", "profile", "@alice.bsky.social"])
+
+    # Verify
+    assert result.exit_code == 0
+    assert "Alice Test" in result.output
+    assert "alice.bsky.social" in result.output
+    assert "did:plc:abc123xyz789" in result.output
+    assert "Python developer" in result.output
+    assert "1,234 followers" in result.output
+    mock_create_client.assert_called_once_with(mock_config, "test.bsky.social", "test_session", "https://bsky.social")
+    mock_client.get_profile.assert_called_once_with("@alice.bsky.social")
+
+
+@patch("atpcli.cli.create_client_with_session_refresh")
+@patch("atpcli.cli.Config")
+def test_profile_me_flag(mock_config_class, mock_create_client, runner):
+    """Test profile with --me flag."""
+    # Setup mocks
+    mock_client = MagicMock()
+    mock_create_client.return_value = mock_client
+
+    # Mock profile response
+    mock_profile = MagicMock()
+    mock_profile.display_name = "Test User"
+    mock_profile.handle = "test.bsky.social"
+    mock_profile.did = "did:plc:test123"
+    mock_profile.description = "My profile"
+    mock_profile.followers_count = 100
+    mock_profile.follows_count = 50
+    mock_profile.posts_count = 25
+    mock_profile.avatar = None
+    mock_client.get_profile.return_value = mock_profile
+
+    # Mock config
+    mock_config = MagicMock()
+    mock_config.load_session.return_value = ("test.bsky.social", "test_session", "https://bsky.social")
+    mock_config_class.return_value = mock_config
+
+    # Run profile with --me
+    result = runner.invoke(cli, ["bsky", "profile", "--me"])
+
+    # Verify
+    assert result.exit_code == 0
+    assert "Test User" in result.output
+    assert "test.bsky.social" in result.output
+    mock_client.get_profile.assert_called_once_with("test.bsky.social")
+
+
+@patch("atpcli.cli.create_client_with_session_refresh")
+@patch("atpcli.cli.Config")
+def test_profile_no_handle(mock_config_class, mock_create_client, runner):
+    """Test profile without handle or --me flag."""
+    # Mock config
+    mock_config = MagicMock()
+    mock_config.load_session.return_value = ("test.bsky.social", "test_session", "https://bsky.social")
+    mock_config_class.return_value = mock_config
+
+    # Run profile without handle or flag
+    result = runner.invoke(cli, ["bsky", "profile"])
+
+    # Verify
+    assert result.exit_code == 1
+    assert "Please provide a handle or use --me" in result.output
+
+
+@patch("atpcli.cli.create_client_with_session_refresh")
+@patch("atpcli.cli.Config")
+def test_posts_not_logged_in(mock_config_class, mock_create_client, runner):
+    """Test posts when not logged in."""
+    mock_config = MagicMock()
+    mock_config.load_session.return_value = (None, None, "https://bsky.social")
+    mock_config_class.return_value = mock_config
+
+    result = runner.invoke(cli, ["bsky", "posts", "@alice.bsky.social"])
+
+    assert result.exit_code == 1
+    assert "Not logged in" in result.output
+
+
+@patch("atpcli.cli.create_client_with_session_refresh")
+@patch("atpcli.cli.Config")
+def test_posts_success(mock_config_class, mock_create_client, runner):
+    """Test successful posts fetch."""
+    # Setup mocks
+    mock_client = MagicMock()
+    mock_create_client.return_value = mock_client
+
+    # Mock posts response
+    mock_post = MagicMock()
+    mock_post.author.display_name = "Alice Test"
+    mock_post.author.handle = "alice.bsky.social"
+    mock_post.author.did = "did:plc:abc123xyz789"
+    mock_post.record.text = "Test post from Alice"
+    mock_post.like_count = 15
+    mock_post.uri = "at://did:plc:abc123xyz789/app.bsky.feed.post/xyz123"
+    mock_post.embed = None
+    mock_post.record.reply = None
+    mock_post.record.facets = None
+
+    mock_feed_view = MagicMock()
+    mock_feed_view.post = mock_post
+
+    mock_feed_response = MagicMock()
+    mock_feed_response.feed = [mock_feed_view]
+    mock_feed_response.cursor = None
+    mock_client.get_author_feed.return_value = mock_feed_response
+
+    # Mock config
+    mock_config = MagicMock()
+    mock_config.load_session.return_value = ("test.bsky.social", "test_session", "https://bsky.social")
+    mock_config_class.return_value = mock_config
+
+    # Run posts
+    result = runner.invoke(cli, ["bsky", "posts", "@alice.bsky.social", "--limit", "10"])
+
+    # Verify
+    assert result.exit_code == 0
+    assert "Loading posts from @alice.bsky.social" in result.output
+    assert "Alice Test" in result.output
+    assert "Test post from Alice" in result.output
+    assert "Showing 1 post" in result.output
+    mock_create_client.assert_called_once_with(mock_config, "test.bsky.social", "test_session", "https://bsky.social")
+    mock_client.get_author_feed.assert_called_once_with(actor="@alice.bsky.social", limit=10, cursor=None)
+
+
+@patch("atpcli.cli.create_client_with_session_refresh")
+@patch("atpcli.cli.Config")
+def test_posts_me_flag(mock_config_class, mock_create_client, runner):
+    """Test posts with --me flag."""
+    # Setup mocks
+    mock_client = MagicMock()
+    mock_create_client.return_value = mock_client
+
+    # Mock posts response
+    mock_post = MagicMock()
+    mock_post.author.display_name = "Test User"
+    mock_post.author.handle = "test.bsky.social"
+    mock_post.author.did = "did:plc:test123"
+    mock_post.record.text = "My test post"
+    mock_post.like_count = 5
+    mock_post.uri = "at://did:plc:test123/app.bsky.feed.post/abc123"
+    mock_post.embed = None
+    mock_post.record.reply = None
+    mock_post.record.facets = None
+
+    mock_feed_view = MagicMock()
+    mock_feed_view.post = mock_post
+
+    mock_feed_response = MagicMock()
+    mock_feed_response.feed = [mock_feed_view]
+    mock_feed_response.cursor = None
+    mock_client.get_author_feed.return_value = mock_feed_response
+
+    # Mock config
+    mock_config = MagicMock()
+    mock_config.load_session.return_value = ("test.bsky.social", "test_session", "https://bsky.social")
+    mock_config_class.return_value = mock_config
+
+    # Run posts with --me
+    result = runner.invoke(cli, ["bsky", "posts", "--me", "--limit", "10"])
+
+    # Verify
+    assert result.exit_code == 0
+    assert "Loading posts from test.bsky.social" in result.output
+    assert "My test post" in result.output
+    mock_client.get_author_feed.assert_called_once_with(actor="test.bsky.social", limit=10, cursor=None)
+
+
+@patch("atpcli.cli.create_client_with_session_refresh")
+@patch("atpcli.cli.Config")
+def test_posts_with_pagination(mock_config_class, mock_create_client, runner):
+    """Test posts with pagination."""
+    # Setup mocks
+    mock_client = MagicMock()
+    mock_create_client.return_value = mock_client
+
+    # Mock feed response for page 1
+    mock_feed_page1 = MagicMock()
+    mock_feed_page1.feed = []
+    mock_feed_page1.cursor = "cursor_page_2"
+
+    # Mock feed response for page 2
+    mock_post = MagicMock()
+    mock_post.author.display_name = "Alice Test"
+    mock_post.author.handle = "alice.bsky.social"
+    mock_post.author.did = "did:plc:abc123xyz789"
+    mock_post.record.text = "Post on page 2"
+    mock_post.like_count = 8
+    mock_post.uri = "at://did:plc:abc123xyz789/app.bsky.feed.post/def456"
+    mock_post.embed = None
+    mock_post.record.reply = None
+    mock_post.record.facets = None
+
+    mock_feed_view = MagicMock()
+    mock_feed_view.post = mock_post
+
+    mock_feed_page2 = MagicMock()
+    mock_feed_page2.feed = [mock_feed_view]
+    mock_feed_page2.cursor = "cursor_page_3"
+
+    # Mock get_author_feed to return different responses
+    mock_client.get_author_feed.side_effect = [mock_feed_page1, mock_feed_page2]
+
+    # Mock config
+    mock_config = MagicMock()
+    mock_config.load_session.return_value = ("test.bsky.social", "test_session", "https://bsky.social")
+    mock_config_class.return_value = mock_config
+
+    # Run posts with page 2
+    result = runner.invoke(cli, ["bsky", "posts", "@alice.bsky.social", "--limit", "5", "--p", "2"])
+
+    # Verify
+    assert result.exit_code == 0
+    assert "Post on page 2" in result.output
+    assert "page 2" in result.output
+    assert "--p 3" in result.output  # Should show next page hint
+    mock_create_client.assert_called_once_with(mock_config, "test.bsky.social", "test_session", "https://bsky.social")
+    # Should be called twice: once to skip page 1, once to get page 2
+    assert mock_client.get_author_feed.call_count == 2
+
+
+@patch("atpcli.cli.create_client_with_session_refresh")
+@patch("atpcli.cli.Config")
+def test_posts_no_handle(mock_config_class, mock_create_client, runner):
+    """Test posts without handle or --me flag."""
+    # Mock config
+    mock_config = MagicMock()
+    mock_config.load_session.return_value = ("test.bsky.social", "test_session", "https://bsky.social")
+    mock_config_class.return_value = mock_config
+
+    # Run posts without handle or flag
+    result = runner.invoke(cli, ["bsky", "posts"])
+
+    # Verify
+    assert result.exit_code == 1
+    assert "Please provide a handle or use --me" in result.output
