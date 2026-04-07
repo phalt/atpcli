@@ -246,18 +246,23 @@ def feeds(output_format: str):
         # Create client with automatic session refresh
         client = create_client_with_session_refresh(config, handle, session_string, pds_url)
 
-        # Get user preferences which includes saved feeds
-        preferences = client.app.bsky.actor.get_preferences()
+        # Get user preferences via raw request to avoid Pydantic validation failures
+        # when Bluesky adds new preference types not yet known to the atproto library
+        # (e.g. app.bsky.actor.defs#declaredAgePref)
+        url = f"{client._base_url}/app.bsky.actor.getPreferences"
+        resp = client.request.get(url)
+        raw_prefs = resp.content  # already parsed as dict
 
         # Extract saved feeds from preferences
         saved_feeds = []
-        for pref in preferences.preferences:
-            if hasattr(pref, "py_type") and pref.py_type == "app.bsky.actor.defs#savedFeedsPref":
-                # This preference contains saved feed URIs
-                if hasattr(pref, "saved"):
-                    saved_feeds = pref.saved
-                elif hasattr(pref, "pinned"):
-                    saved_feeds = pref.pinned
+        for pref in raw_prefs.get("preferences", []):
+            pref_type = pref.get("$type", "")
+            if pref_type == "app.bsky.actor.defs#savedFeedsPref":
+                saved_feeds = pref.get("saved", pref.get("pinned", []))
+                break
+            elif pref_type == "app.bsky.actor.defs#savedFeedsPrefV2":
+                # V2 format: items is a list of {id, pinned, type, value} objects
+                saved_feeds = [item["value"] for item in pref.get("items", []) if "value" in item]
                 break
 
         if not saved_feeds:
@@ -287,9 +292,11 @@ def feeds(output_format: str):
                 # If we can't fetch details, just show the URI
                 feed_details.append({"name": feed_uri.split("/")[-1], "uri": feed_uri, "description": ""})
 
-        # Display table using display function
-        table = display_feeds(feed_details)
-        console.print(table)
+        # Display feeds using display function
+        tables = display_feeds(feed_details)
+        console.print(f"\n[bold]Saved Feeds ({len(tables)})[/bold]\n")
+        for table in tables:
+            console.print(table)
         console.print("\n[dim]Use 'atpcli bsky feed <uri>' to view posts from a specific feed.[/dim]")
 
     except Exception as e:

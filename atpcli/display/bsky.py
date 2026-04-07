@@ -346,24 +346,27 @@ def display_post(post: PostView, client=None) -> Table:
     return table
 
 
-def display_feeds(feed_details: List[dict]) -> Table:
-    """Display a list of feeds as a table.
+def display_feeds(feed_details: List[dict]) -> List[Table]:
+    """Display a list of feeds as individual tables.
 
     Args:
         feed_details: List of dictionaries with 'name', 'uri', and 'description' keys
 
     Returns:
-        Rich Table with the formatted feeds
+        List of Rich Tables, one per feed
     """
-    table = Table(title=f"Saved Feeds ({len(feed_details)})", show_header=True, expand=True)
-    table.add_column("Feed Name", style="cyan", overflow="fold")
-    table.add_column("URI", style="dim white", overflow="fold")
-    table.add_column("Description", style="white", overflow="fold")
-
+    tables = []
     for feed in feed_details:
-        table.add_row(feed["name"], feed["uri"], feed["description"])
+        table = Table(title=feed["name"], show_header=False, expand=True)
+        table.add_column("Content", style="white", overflow="fold")
 
-    return table
+        if feed["description"]:
+            table.add_row(feed["description"])
+
+        table.add_row(Text(feed["uri"], style="dim"))
+        tables.append(table)
+
+    return tables
 
 
 def get_profile_display(client, did: str, profile_cache: dict) -> str:
