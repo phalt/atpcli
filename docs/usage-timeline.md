@@ -84,8 +84,17 @@ The timeline is displayed as a table with post information:
    - ⤴️ Reply to another post
    - 🔁 Repost or quote post
    - 📷 Post with images (if not a reply or repost)
-2. **Post**: The text content of the post (wrapped to fit)
-3. **Likes**: Number of likes the post has received
+2. **DID**: User's decentralized identifier (always shown, styled subtly below author name)
+3. **Post**: The text content of the post (wrapped to fit)
+4. **Likes**: Number of likes the post has received
+
+### DID Display
+
+**New in this version:** All posts now display the user's DID (decentralized identifier) below the author name. This is styled with dim text for subtlety but remains easily selectable for copy/paste operations.
+
+The DID is NOT part of the clickable link, so you can:
+- Shift+Click on the author name to open the post in your browser
+- Select and copy the DID without opening the link
 
 ### Emoji Indicators
 
